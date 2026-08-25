@@ -1,0 +1,25 @@
+# Hello Tailor — SPA rewrite for Apache (Hostinger hPanel).
+# Without this, refreshing any deep route (e.g. /customer/tailor/123) 404s,
+# because Apache looks for a matching file/folder before React Router ever runs.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Let real files and folders (JS/CSS/images/etc.) serve directly.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else falls back to index.html so React Router can take over.
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Fingerprinted assets (Vite outputs content-hashed filenames) can cache forever.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>

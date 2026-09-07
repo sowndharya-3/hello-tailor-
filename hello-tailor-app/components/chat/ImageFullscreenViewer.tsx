@@ -24,7 +24,7 @@ export default function ImageFullscreenViewer({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.wrap}>
-        <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
+        <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close fullscreen image">
           <Ionicons name="close" size={28} color={colors.white} />
         </Pressable>
         {images.length > 1 ? (

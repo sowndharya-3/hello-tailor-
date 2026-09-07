@@ -237,7 +237,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     appendMessage(set, {
       id: nextId('MSG'),
       conversationId: version.conversationId,
-      senderId: version.bookingId ? 'me' : 'me',
+      senderId: 'me',
       senderType: 'customer',
       messageType: 'change_request',
       designVersionId,
@@ -336,9 +336,9 @@ function appendMessage(set: (fn: (s: ChatState) => Partial<ChatState>) => void, 
   emitRealtimeEvent({ type: 'message:new', conversationId: message.conversationId, message });
 }
 
-// Simulated network round-trip: sending -> sent -> delivered. A message can be made to "fail"
-// by the demo composer (see MessageComposer) setting text to start with "@@failtest" — kept out
-// of the store's own logic so this file has no special-cased business rule baked in.
+// Simulated network round-trip: sending -> sent -> delivered. A message can be made to "fail" by
+// typing exactly "fail test" as the message body (case-insensitive) — a manual way to exercise
+// the Failed/Retry UI without a real flaky network to trigger it.
 function progressMessageDelivery(
   set: (fn: (s: ChatState) => Partial<ChatState>) => void,
   get: () => ChatState,
@@ -392,6 +392,34 @@ export const useTotalUnread = (role: 'customer' | 'tailor') =>
   );
 export const useIsTyping = (conversationId: string, watchSenderType: SenderType) =>
   useChatStore((s) => Boolean(s.typingByConversation[conversationId]?.[watchSenderType]));
+
+// Step 3 — there's no real other-party client in this mock to emit genuine typing:start/stop
+// events, so this demonstrates the wiring concretely: called right after the current user sends
+// a message, it makes the *other* role appear to be typing for a couple of seconds (as if they
+// just saw the message and are replying), then clears itself. Plain function (not a hook) since
+// it's called from an event handler, not render; owns its own timers and clears any pulse
+// already running for this conversation+role so rapid sends can't stack timers or leave the
+// indicator stuck on.
+const typingTimers = new Map<string, { start: ReturnType<typeof setTimeout>; stop: ReturnType<typeof setTimeout> }>();
+
+export function simulateTypingPulse(conversationId: string, otherPartyRole: SenderType, startDelayMs = 900, durationMs = 2200) {
+  const key = `${conversationId}:${otherPartyRole}`;
+  const existing = typingTimers.get(key);
+  if (existing) {
+    clearTimeout(existing.start);
+    clearTimeout(existing.stop);
+  }
+  const start = setTimeout(() => {
+    useChatStore.getState().setTyping(conversationId, otherPartyRole, true);
+    emitRealtimeEvent({ type: 'typing:start', conversationId, senderType: otherPartyRole });
+  }, startDelayMs);
+  const stop = setTimeout(() => {
+    useChatStore.getState().setTyping(conversationId, otherPartyRole, false);
+    emitRealtimeEvent({ type: 'typing:stop', conversationId, senderType: otherPartyRole });
+    typingTimers.delete(key);
+  }, startDelayMs + durationMs);
+  typingTimers.set(key, { start, stop });
+}
 
 // Bridge for the mock realtime emitter -> zustand: nothing needs to subscribe today since every
 // store action already updates state synchronously (mock delivery just uses setTimeout inside

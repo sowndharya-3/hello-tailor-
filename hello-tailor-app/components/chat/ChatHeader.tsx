@@ -22,7 +22,7 @@ export default function ChatHeader({
 
   return (
     <View style={styles.wrap}>
-      <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconBtn}>
+      <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel="Go back">
         <Ionicons name="chevron-back" size={26} color={colors.white} />
       </Pressable>
       <Avatar uri={avatar} name={name} size={38} />
@@ -38,7 +38,7 @@ export default function ChatHeader({
         )}
       </View>
       {onMorePress ? (
-        <Pressable onPress={onMorePress} hitSlop={10} style={styles.iconBtn}>
+        <Pressable onPress={onMorePress} hitSlop={10} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel="More options">
           <Ionicons name="ellipsis-vertical" size={20} color={colors.white} />
         </Pressable>
       ) : null}

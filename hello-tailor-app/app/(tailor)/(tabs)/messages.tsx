@@ -6,12 +6,14 @@
 // chip visual language.
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import ScreenHeader from '@/components/ui/ScreenHeader';
 import ConversationCard from '@/components/chat/ConversationCard';
-import { ChatListSkeleton, ChatEmptyState } from '@/components/chat/ChatStates';
-import { useConversations } from '@/store/chatStore';
+import { ChatListSkeleton, ChatEmptyState, ChatErrorState } from '@/components/chat/ChatStates';
+import { useConversations, useChatStore } from '@/store/chatStore';
 import { getConversations } from '@/services/chatService';
+import { buildNotificationCopy, handleNotificationTap } from '@/services/pushNotifications';
 import type { BookingChatStatus } from '@/store/chatTypes';
 import { colors, font, spacing } from '@/theme';
 
@@ -20,17 +22,26 @@ type Filter = (typeof FILTERS)[number];
 
 export default function MessagesTab() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [filter, setFilter] = useState<Filter>('All');
   const conversations = useConversations();
+  const changesRequestedVersion = useChatStore((s) => s.designVersions.find((v) => v.status === 'changes_requested'));
+
+  const fetchConversations = () => {
+    setLoading(true);
+    setError(false);
+    getConversations()
+      .then(() => setLoading(false))
+      .catch(() => {
+        // Unreachable with the current mock service — kept so this screen is already correct
+        // for when a real backend call can fail.
+        setLoading(false);
+        setError(true);
+      });
+  };
 
   useEffect(() => {
-    let active = true;
-    getConversations().then(() => {
-      if (active) setLoading(false);
-    });
-    return () => {
-      active = false;
-    };
+    fetchConversations();
   }, []);
 
   const filtered = conversations
@@ -58,11 +69,13 @@ export default function MessagesTab() {
 
       {loading ? (
         <ChatListSkeleton />
+      ) : error ? (
+        <ChatErrorState onRetry={fetchConversations} />
       ) : (
         <FlatList
           data={filtered}
           keyExtractor={(c) => c.id}
-          contentContainerStyle={{ paddingBottom: 24 }}
+          contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
           renderItem={({ item }) => (
             <ConversationCard
               conversation={item}
@@ -70,9 +83,32 @@ export default function MessagesTab() {
               onPress={() => router.push({ pathname: '/(tailor)/chat/[conversationId]', params: { conversationId: item.id } })}
             />
           )}
-          ListEmptyComponent={<ChatEmptyState role="tailor" />}
+          ListEmptyComponent={
+            <ChatEmptyState role="tailor" variant={filter === 'All' ? 'none' : filter === 'Unread' ? 'unread' : 'filter'} />
+          }
         />
       )}
+
+      {/* ponytail: demo affordance proving the "Changes Requested" tailor-facing deep-link
+          actually opens the right conversation + design context — see the matching customer-side
+          simulate row in (customer)/messages/index.tsx. Remove once real push lands. */}
+      {!loading && !error && changesRequestedVersion ? (
+        <Pressable
+          style={styles.simulateBtn}
+          onPress={() => {
+            const conv = conversations.find((c) => c.id === changesRequestedVersion.conversationId);
+            if (!conv) return;
+            const copy = buildNotificationCopy('changes_requested', { otherPartyName: conv.customerName, bookingId: conv.bookingId, designVersion: changesRequestedVersion.version });
+            handleNotificationTap(
+              { type: 'changes_requested', conversationId: conv.id, bookingId: conv.bookingId, designVersionId: changesRequestedVersion.id, title: copy.title, body: copy.body },
+              'tailor',
+            );
+          }}
+        >
+          <Ionicons name="notifications-outline" size={14} color={colors.secondary} />
+          <Text style={styles.simulateText}>Simulate: Changes Requested</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -85,4 +121,6 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: colors.secondary, borderColor: colors.secondary },
   chipText: { fontFamily: font.medium, fontSize: 12.5, color: colors.textPrimary },
   chipTextActive: { color: colors.white },
+  simulateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10 },
+  simulateText: { fontFamily: font.medium, fontSize: 11.5, color: colors.secondary },
 });

@@ -15,13 +15,14 @@ import ImageFullscreenViewer from '@/components/chat/ImageFullscreenViewer';
 import TypingIndicator from '@/components/chat/TypingIndicator';
 import BottomSheet from '@/components/ui/BottomSheet';
 import Button from '@/components/ui/Button';
-import { ChatEmptyState } from '@/components/chat/ChatStates';
-import { useConversationById, useMessages, useDesignVersionsFor, useIsTyping } from '@/store/chatStore';
+import { ChatEmptyState, ChatHistorySkeleton } from '@/components/chat/ChatStates';
+import EmptyState from '@/components/ui/EmptyState';
+import { useConversationById, useMessages, useDesignVersionsFor, useIsTyping, simulateTypingPulse } from '@/store/chatStore';
 import { sendMessage, retryMessage, markMessageRead, approveDesign, requestDesignChanges } from '@/services/chatService';
 import { CHANGE_REQUEST_OPTIONS, type ChangeRequestOption, type Message, type PhotoType } from '@/store/chatTypes';
 
 export default function ChatRoom() {
-  const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
+  const { conversationId, scrollToDesignVersionId } = useLocalSearchParams<{ conversationId: string; scrollToDesignVersionId?: string }>();
   const conversation = useConversationById(conversationId);
   const messages = useMessages(conversationId);
   const designVersions = useDesignVersionsFor(conversationId);
@@ -31,11 +32,19 @@ export default function ChatRoom() {
   const [attachSheetOpen, setAttachSheetOpen] = useState(false);
   const [viewerImages, setViewerImages] = useState<{ images: string[]; index: number } | null>(null);
   const [changeRequestFor, setChangeRequestFor] = useState<string | null>(null); // designVersionId
+  const [loading, setLoading] = useState(true);
 
   // Mark-as-read once per conversation mount/id-change only — never during render (see
   // store/chatStore.ts header comment on the "Maximum update depth exceeded" bug class).
   useEffect(() => {
     markMessageRead(conversationId, 'customer');
+  }, [conversationId]);
+
+  // Brief simulated fetch so a brand-new conversation shows a skeleton then a real empty state
+  // instead of a blank FlatList.
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 300);
+    return () => clearTimeout(t);
   }, [conversationId]);
 
   const items = useMemo(() => {
@@ -52,6 +61,19 @@ export default function ChatRoom() {
     return out;
   }, [messages]);
 
+  // Step 21 — "Approval Required"/"Changes Requested" notifications deep-link with a target
+  // design version; scroll to the message that carries it once the list has rendered.
+  useEffect(() => {
+    if (!scrollToDesignVersionId || loading) return;
+    const index = items.findIndex((it) => it.type === 'msg' && it.message.designVersionId === scrollToDesignVersionId);
+    if (index < 0) return;
+    const t = setTimeout(() => {
+      listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.3 });
+    }, 150);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollToDesignVersionId, loading]);
+
   if (!conversation) {
     return (
       <View style={styles.wrap}>
@@ -64,39 +86,56 @@ export default function ChatRoom() {
     <KeyboardAvoidingView style={styles.wrap} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ChatHeader conversation={conversation} viewerRole="customer" />
 
-      <FlatList
-        ref={listRef}
-        data={items}
-        keyExtractor={(item) => item.key}
-        contentContainerStyle={{ paddingVertical: spacing.md, flexGrow: 1 }}
-        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
-        ListFooterComponent={isTailorTyping ? <TypingIndicator /> : null}
-        renderItem={({ item }) =>
-          item.type === 'date' ? (
-            <DateSeparator label={item.label} />
-          ) : (
-            <MessageBubble
-              message={item.message}
-              viewerRole="customer"
-              isOwn={item.message.senderType === 'customer'}
-              designVersion={designVersions.find((v) => v.id === item.message.designVersionId)}
-              onRetry={() => retryMessage(conversationId, item.message.id)}
-              onImagePress={(uris, index) => setViewerImages({ images: uris, index })}
-              onApproveDesign={item.message.designVersionId ? () => approveDesign(item.message.designVersionId!) : undefined}
-              onRequestChanges={item.message.designVersionId ? () => setChangeRequestFor(item.message.designVersionId!) : undefined}
-            />
-          )
-        }
-      />
+      {loading ? (
+        <ChatHistorySkeleton />
+      ) : items.length === 0 ? (
+        <View style={styles.emptyFill}>
+          <EmptyState
+            icon="chatbubble-ellipses-outline"
+            title="No messages yet."
+            message="Say hello to get started with this tailor."
+          />
+        </View>
+      ) : (
+        <FlatList
+          ref={listRef}
+          data={items}
+          keyExtractor={(item) => item.key}
+          contentContainerStyle={{ paddingVertical: spacing.md, flexGrow: 1 }}
+          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+          onScrollToIndexFailed={() => {}}
+          ListFooterComponent={isTailorTyping ? <TypingIndicator /> : null}
+          renderItem={({ item }) =>
+            item.type === 'date' ? (
+              <DateSeparator label={item.label} />
+            ) : (
+              <MessageBubble
+                message={item.message}
+                viewerRole="customer"
+                isOwn={item.message.senderType === 'customer'}
+                designVersion={designVersions.find((v) => v.id === item.message.designVersionId)}
+                onRetry={() => retryMessage(conversationId, item.message.id)}
+                onImagePress={(uris, index) => setViewerImages({ images: uris, index })}
+                onApproveDesign={item.message.designVersionId ? () => approveDesign(item.message.designVersionId!) : undefined}
+                onRequestChanges={item.message.designVersionId ? () => setChangeRequestFor(item.message.designVersionId!) : undefined}
+              />
+            )
+          }
+        />
+      )}
 
       <MessageComposer
-        onSendText={(text) => sendMessage(conversationId, 'customer', 'me', text)}
+        onSendText={(text) => {
+          sendMessage(conversationId, 'customer', 'me', text);
+          simulateTypingPulse(conversationId, 'tailor');
+        }}
         onAttachPress={() => setAttachSheetOpen(true)}
       />
 
       <AttachmentBottomSheet
         visible={attachSheetOpen}
         onClose={() => setAttachSheetOpen(false)}
+        role="customer"
         onPicked={(uri, suggestedType) =>
           router.push({
             pathname: '/(customer)/chat/[conversationId]/preview',
@@ -206,6 +245,7 @@ function ChangeRequestSheet({
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg },
+  emptyFill: { flex: 1, justifyContent: 'center' },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.md },
   chip: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border },
   chipActive: { backgroundColor: colors.secondary, borderColor: colors.secondary },

@@ -26,7 +26,7 @@ export default function MessageComposer({
 
   return (
     <View style={styles.wrap}>
-      <Pressable onPress={onAttachPress} hitSlop={10} style={styles.iconBtn}>
+      <Pressable onPress={onAttachPress} hitSlop={10} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel="Add attachment">
         <Ionicons name="add-circle" size={30} color={colors.secondary} />
       </Pressable>
       <TextInput
@@ -36,8 +36,16 @@ export default function MessageComposer({
         placeholderTextColor={colors.disabledText}
         style={styles.input}
         multiline
+        accessibilityLabel="Message"
       />
-      <Pressable onPress={send} hitSlop={10} disabled={!text.trim()} style={[styles.sendBtn, !text.trim() && styles.sendBtnDisabled]}>
+      <Pressable
+        onPress={send}
+        hitSlop={10}
+        disabled={!text.trim()}
+        style={[styles.sendBtn, !text.trim() && styles.sendBtnDisabled]}
+        accessibilityRole="button"
+        accessibilityLabel="Send message"
+      >
         <Ionicons name="send" size={18} color={colors.white} />
       </Pressable>
     </View>

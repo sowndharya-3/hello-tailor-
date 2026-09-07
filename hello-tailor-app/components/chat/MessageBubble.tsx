@@ -2,7 +2,7 @@
 // for system messages ("Customer approved Design V1."), and the specialised cards for every
 // attachment/design message type. Callers (the chat screen) never need an if/else over
 // messageType themselves — one <MessageBubble message={m} .../> per list item covers everything.
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, font, spacing } from '@/theme';
 import type { Message } from '@/store/chatTypes';
 import MessageStatus from './MessageStatus';
@@ -91,9 +91,12 @@ export default function MessageBubble({
           {isOwn ? <MessageStatus status={message.status} size={13} /> : null}
         </View>
         {message.status === 'failed' && isOwn ? (
-          <Text onPress={onRetry} style={styles.retry}>
-            Retry
-          </Text>
+          <View style={styles.failedRow}>
+            <Text style={styles.failedText}>Failed to send</Text>
+            <Pressable onPress={onRetry} hitSlop={8} accessibilityRole="button" accessibilityLabel="Retry sending message">
+              <Text style={styles.retry}>Retry</Text>
+            </Pressable>
+          </View>
         ) : null}
       </View>
     </View>
@@ -131,7 +134,9 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end', marginTop: 4 },
   time: { fontFamily: font.regular, fontSize: 10, color: colors.textSecondary },
   timeOwn: { color: 'rgba(255,255,255,0.8)' },
-  retry: { fontFamily: font.semibold, fontSize: 11, color: colors.error, marginTop: 4, alignSelf: 'flex-end' },
+  failedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-end', marginTop: 4 },
+  failedText: { fontFamily: font.medium, fontSize: 11, color: colors.error },
+  retry: { fontFamily: font.semibold, fontSize: 11, color: colors.error, textDecorationLine: 'underline' },
   cardRow: { paddingHorizontal: spacing.screenH, marginBottom: 4, alignItems: 'flex-start' },
   cardRowRight: { alignItems: 'flex-end' },
   systemWrap: { alignSelf: 'center', backgroundColor: colors.disabledBg, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, marginVertical: 8 },

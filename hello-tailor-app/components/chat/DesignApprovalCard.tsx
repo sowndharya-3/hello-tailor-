@@ -43,7 +43,7 @@ export default function DesignApprovalCard({
   return (
     <View style={styles.card}>
       <Text style={styles.title}>DESIGN PREVIEW — V{version.version}</Text>
-      <Pressable onPress={onImagePress}>
+      <Pressable onPress={onImagePress} accessibilityRole="imagebutton" accessibilityLabel={`View design version ${version.version} fullscreen`}>
         <Image source={{ uri: version.imageUrl }} style={styles.image} resizeMode="cover" />
       </Pressable>
 

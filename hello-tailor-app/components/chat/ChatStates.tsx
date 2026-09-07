@@ -45,7 +45,27 @@ export function DesignCardSkeleton() {
   );
 }
 
-export function ChatEmptyState({ role }: { role: 'customer' | 'tailor' }) {
+// `variant` covers the distinct empty states a Messages list can be in (Step 5/6/16) — plain
+// "no conversations yet" reads as broken when what's actually true is "no unread" or "no match
+// for your search/filter", so each gets its own copy instead of one generic message everywhere.
+export function ChatEmptyState({
+  role,
+  variant = 'none',
+  query,
+}: {
+  role: 'customer' | 'tailor';
+  variant?: 'none' | 'unread' | 'search' | 'filter';
+  query?: string;
+}) {
+  if (variant === 'search') {
+    return <EmptyState icon="search-outline" title="No results found" message={query ? `No conversations match "${query}".` : 'Try a different search.'} />;
+  }
+  if (variant === 'unread') {
+    return <EmptyState icon="checkmark-done-circle-outline" title="You're all caught up" message="No unread conversations right now." />;
+  }
+  if (variant === 'filter') {
+    return <EmptyState icon="filter-outline" title="No conversations here" message="Nothing matches this filter yet." />;
+  }
   return role === 'customer' ? (
     <EmptyState icon="chatbubbles-outline" title="No messages yet." message="Start a conversation with your tailor." />
   ) : (

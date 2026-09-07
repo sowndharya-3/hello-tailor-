@@ -11,8 +11,8 @@ import { router } from 'expo-router';
 import { colors, font, spacing } from '@/theme';
 import SegmentedControl from '@/components/ui/SegmentedControl';
 import ConversationCard from '@/components/chat/ConversationCard';
-import { ChatListSkeleton, ChatEmptyState } from '@/components/chat/ChatStates';
-import { useConversations } from '@/store/chatStore';
+import { ChatListSkeleton, ChatEmptyState, ChatErrorState } from '@/components/chat/ChatStates';
+import { useConversations, useChatStore } from '@/store/chatStore';
 import { getConversations } from '@/services/chatService';
 import { buildNotificationCopy, handleNotificationTap } from '@/services/pushNotifications';
 
@@ -20,19 +20,28 @@ const TABS = ['All', 'Unread'] as const;
 
 export default function MessagesTab() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [tab, setTab] = useState<(typeof TABS)[number]>('All');
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const conversations = useConversations();
+  const pendingDesignVersion = useChatStore((s) => s.designVersions.find((v) => v.status === 'pending'));
+
+  const fetchConversations = () => {
+    setLoading(true);
+    setError(false);
+    getConversations()
+      .then(() => setLoading(false))
+      .catch(() => {
+        // Unreachable with the current mock service (it never rejects) — this path exists so
+        // the UI is already correct for when a real backend call can actually fail.
+        setLoading(false);
+        setError(true);
+      });
+  };
 
   useEffect(() => {
-    let active = true;
-    getConversations().then(() => {
-      if (active) setLoading(false);
-    });
-    return () => {
-      active = false;
-    };
+    fetchConversations();
   }, []);
 
   const filtered = conversations
@@ -80,11 +89,13 @@ export default function MessagesTab() {
 
       {loading ? (
         <ChatListSkeleton />
+      ) : error ? (
+        <ChatErrorState onRetry={fetchConversations} />
       ) : (
         <FlatList
           data={filtered}
           keyExtractor={(c) => c.id}
-          contentContainerStyle={{ paddingBottom: 24 }}
+          contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
           renderItem={({ item }) => (
             <ConversationCard
               conversation={item}
@@ -92,26 +103,50 @@ export default function MessagesTab() {
               onPress={() => router.push({ pathname: '/(customer)/chat/[conversationId]', params: { conversationId: item.id } })}
             />
           )}
-          ListEmptyComponent={<ChatEmptyState role="customer" />}
+          ListEmptyComponent={
+            <ChatEmptyState role="customer" variant={query.trim() ? 'search' : tab === 'Unread' ? 'unread' : 'none'} query={query} />
+          }
         />
       )}
 
       {/* ponytail: no real FCM in this prototype (see services/pushNotifications.ts header) — this
           dev-only affordance proves handleNotificationTap's deep-link actually works end to end
           without building a full "notifications received" simulation UI, which the brief says is
-          fine to skip under time pressure. Remove once real push notifications land. */}
+          fine to skip under time pressure. Two variants cover the two distinct tap behaviors the
+          brief calls out: a plain new-message notification just opens the chat, while an
+          Approval Required one must land on the specific design-approval card — remove this row
+          once real push notifications land. */}
       {!loading && conversations[0] ? (
-        <Pressable
-          style={styles.simulateBtn}
-          onPress={() => {
-            const conv = conversations[0];
-            const copy = buildNotificationCopy('new_message', { otherPartyName: conv.tailorName, bookingId: conv.bookingId });
-            handleNotificationTap({ type: 'new_message', conversationId: conv.id, bookingId: conv.bookingId, title: copy.title, body: copy.body }, 'customer');
-          }}
-        >
-          <Ionicons name="notifications-outline" size={14} color={colors.secondary} />
-          <Text style={styles.simulateText}>Simulate incoming notification</Text>
-        </Pressable>
+        <View style={styles.simulateRow}>
+          <Pressable
+            style={styles.simulateBtn}
+            onPress={() => {
+              const conv = conversations[0];
+              const copy = buildNotificationCopy('new_message', { otherPartyName: conv.tailorName, bookingId: conv.bookingId });
+              handleNotificationTap({ type: 'new_message', conversationId: conv.id, bookingId: conv.bookingId, title: copy.title, body: copy.body }, 'customer');
+            }}
+          >
+            <Ionicons name="notifications-outline" size={14} color={colors.secondary} />
+            <Text style={styles.simulateText}>Simulate: New Message</Text>
+          </Pressable>
+          {pendingDesignVersion ? (
+            <Pressable
+              style={styles.simulateBtn}
+              onPress={() => {
+                const conv = conversations.find((c) => c.id === pendingDesignVersion.conversationId);
+                if (!conv) return;
+                const copy = buildNotificationCopy('approval_required', { otherPartyName: conv.tailorName, bookingId: conv.bookingId });
+                handleNotificationTap(
+                  { type: 'approval_required', conversationId: conv.id, bookingId: conv.bookingId, designVersionId: pendingDesignVersion.id, title: copy.title, body: copy.body },
+                  'customer',
+                );
+              }}
+            >
+              <Ionicons name="cut-outline" size={14} color={colors.gold} />
+              <Text style={[styles.simulateText, { color: '#8A6420' }]}>Simulate: Approval Required</Text>
+            </Pressable>
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
@@ -130,6 +165,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
   },
   searchInput: { flex: 1, fontFamily: font.regular, fontSize: 14, color: colors.text },
+  simulateRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.md, paddingBottom: 4 },
   simulateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10 },
   simulateText: { fontFamily: font.medium, fontSize: 11.5, color: colors.secondary },
 });

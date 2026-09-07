@@ -48,8 +48,8 @@ export default function PhotoAttachmentCard({
       <View style={[styles.label, { backgroundColor: `${accent}1A` }]}>
         <Text style={[styles.labelText, { color: accent }]}>{LABELS[type]}</Text>
       </View>
-      <Pressable onPress={onPress}>
-        <Image source={{ uri: attachment.thumbnailUrl ?? attachment.fileUrl }} style={styles.image} resizeMode="cover" />
+      <Pressable onPress={onPress} accessibilityRole="imagebutton" accessibilityLabel={`View ${LABELS[type].toLowerCase()} fullscreen`}>
+        <Image source={{ uri: attachment.thumbnailUrl ?? attachment.fileUrl }} style={styles.image} resizeMode="cover" accessibilityLabel={LABELS[type]} />
       </Pressable>
       {caption ? <Text style={styles.caption}>{caption}</Text> : null}
       <Text style={styles.time}>{formatTime(timestamp)}</Text>

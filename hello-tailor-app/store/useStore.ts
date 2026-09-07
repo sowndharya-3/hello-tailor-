@@ -3,6 +3,7 @@
 // merge: a booking made as a customer is immediately visible to the tailor role (filtered
 // by tailorId) and to the admin orders table (unfiltered) — no separate mock datasets.
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import type {
   Role, Booking, BookingStatus, NotificationItem, Tailor, Customer, Review, Payment,
   CommissionEntry, MembershipPlan, Coupon, Advertisement, Complaint, LocationEntry,
@@ -279,8 +280,8 @@ export const useStore = create<StoreState>((set, get) => ({
 
 // Convenience selectors used across role screens.
 export const useMyTailor = () => useStore((s) => s.tailors.find((t) => t.id === s.myTailorId)!);
-export const useMyBookings = () => useStore((s) => s.bookings.filter((b) => b.tailorId === s.myTailorId));
-export const useCustomerBookings = () => useStore((s) => s.bookings.filter((b) => b.customerId === 'me'));
+export const useMyBookings = () => useStore(useShallow((s) => s.bookings.filter((b) => b.tailorId === s.myTailorId)));
+export const useCustomerBookings = () => useStore(useShallow((s) => s.bookings.filter((b) => b.customerId === 'me')));
 
 export { ME_CUSTOMER, ME_TAILOR_ID };
 export type { Booking, BookingStatus, Tailor, Customer } from './types';

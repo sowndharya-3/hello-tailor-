@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { colors, font, spacing } from '@/theme';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import ScreenHeader from '@/components/ui/ScreenHeader';
 import Card from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
@@ -20,7 +21,7 @@ const VERIFICATION_REJECT_REASONS = ['Documents unclear/incomplete', 'Shop addre
 export default function TailorDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const tailor = useStore((s) => s.tailors.find((t) => t.id === id));
-  const bookings = useStore((s) => s.bookings.filter((b) => b.tailorId === id));
+  const bookings = useStore(useShallow((s) => s.bookings.filter((b) => b.tailorId === id)));
   const updateTailorStatus = useStore((s) => s.updateTailorStatus);
   const updateTailorVerification = useStore((s) => s.updateTailorVerification);
   const [confirmBlock, setConfirmBlock] = useState(false);

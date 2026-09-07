@@ -9,14 +9,15 @@ import { MetricCard, StatusPill } from '@/components/ui/Misc';
 import StarRating from '@/components/ui/StarRating';
 import { LineChart } from '@/components/ui/Chart';
 import { useStore, useMyTailor, useMyBookings } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { colors, font, spacing } from '@/theme';
 
 export default function Dashboard() {
   const tailor = useMyTailor();
   const toggleOnline = useStore((s) => s.toggleOnline);
   const bookings = useMyBookings();
-  const notifications = useStore((s) => s.notifications.filter((n) => n.audience === 'tailor'));
-  const reviews = useStore((s) => s.reviews.filter((r) => r.tailorId === s.myTailorId));
+  const notifications = useStore(useShallow((s) => s.notifications.filter((n) => n.audience === 'tailor')));
+  const reviews = useStore(useShallow((s) => s.reviews.filter((r) => r.tailorId === s.myTailorId)));
   const unread = notifications.filter((n) => !n.read).length;
 
   const requested = bookings.filter((b) => b.status === 'Requested');

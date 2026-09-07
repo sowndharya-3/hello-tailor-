@@ -13,6 +13,8 @@ import ScreenHeader from '@/components/ui/ScreenHeader';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import ErrorState from '@/components/ui/ErrorState';
+import { createConversation } from '@/services/chatService';
+import { ME_CUSTOMER } from '@/data/seed';
 
 function timestampFor(historyStage: string, history: { stage: string; at: string }[]) {
   const entry = history.find((h) => h.stage === historyStage);
@@ -37,6 +39,20 @@ export default function OrderTracking() {
   const terminal = booking.status === 'Rejected' || booking.status === 'Cancelled';
   const currentIndex = terminal ? -1 : BOOKING_STAGES.indexOf(booking.status);
   const balanceDue = booking.amount + booking.tax + booking.deliveryFee - booking.discount - booking.advanceAmount;
+
+  const handleChatWithTailor = async () => {
+    const conversation = await createConversation({
+      customerId: 'me',
+      customerName: ME_CUSTOMER.name,
+      customerAvatar: ME_CUSTOMER.avatar,
+      tailorId: booking.tailorId,
+      tailorName: booking.tailorName,
+      tailorAvatar: tailor?.image ?? '',
+      bookingId: booking.id,
+      bookingCategory: booking.category,
+    });
+    router.push({ pathname: '/(customer)/chat/[conversationId]', params: { conversationId: conversation.id } });
+  };
 
   return (
     <View style={styles.wrap}>
@@ -95,6 +111,13 @@ export default function OrderTracking() {
           )}
           <Button label="Re-order" variant="outline" style={{ flex: 1 }} onPress={() => router.push(`/order/${booking.id}/reorder` as any)} />
         </View>
+        <Button
+          label="Chat with Tailor"
+          variant="outline"
+          icon={<Ionicons name="chatbubble-outline" size={16} color={colors.secondary} />}
+          style={{ marginTop: spacing.sm }}
+          onPress={handleChatWithTailor}
+        />
         <Pressable style={styles.complaintLink} onPress={() => router.push({ pathname: '/profile/complaints/new', params: { orderId: booking.id } } as any)}>
           <Ionicons name="alert-circle-outline" size={16} color={colors.error} />
           <Text style={styles.complaintText}>Report an issue with this order</Text>

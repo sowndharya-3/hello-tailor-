@@ -8,6 +8,7 @@ import ScreenHeader from '@/components/ui/ScreenHeader';
 import EmptyState from '@/components/ui/EmptyState';
 import Card from '@/components/ui/Card';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { colors, font, spacing } from '@/theme';
 
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -31,7 +32,7 @@ function timeAgo(iso: string) {
 }
 
 export default function Notifications() {
-  const notifications = useStore((s) => s.notifications.filter((n) => n.audience === 'tailor'));
+  const notifications = useStore(useShallow((s) => s.notifications.filter((n) => n.audience === 'tailor')));
   const markRead = useStore((s) => s.markNotificationRead);
   const markAllRead = useStore((s) => s.markAllNotificationsRead);
 

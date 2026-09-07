@@ -10,7 +10,8 @@ import { StatusPill } from '@/components/ui/Misc';
 import Button from '@/components/ui/Button';
 import { CustomerInfoCard, CustomerNotesCard, FinancialSummaryCard, MeasurementsPreviewCard, DesignPhotosPreviewCard } from '@/components/tailor/OrderDetailShared';
 import { ReasonSheet, REJECT_REASONS } from '@/components/tailor/ReasonSheet';
-import { useStore } from '@/store/useStore';
+import { useStore, useMyTailor, ME_TAILOR_ID } from '@/store/useStore';
+import { createConversation } from '@/services/chatService';
 import { colors, font, spacing } from '@/theme';
 
 export default function BookingDetail() {
@@ -18,8 +19,25 @@ export default function BookingDetail() {
   const booking = useStore((s) => s.bookings.find((b) => b.id === id));
   const acceptBooking = useStore((s) => s.acceptBooking);
   const rejectBooking = useStore((s) => s.rejectBooking);
+  const tailor = useMyTailor();
   const [rejectVisible, setRejectVisible] = useState(false);
   const [result, setResult] = useState<'accepted' | 'rejected' | null>(null);
+
+  const messageCustomer = async () => {
+    if (!booking) return;
+    const conversation = await createConversation({
+      customerId: booking.customerId,
+      customerName: booking.customerName,
+      customerAvatar: booking.customerAvatar,
+      tailorId: ME_TAILOR_ID,
+      tailorName: tailor.name,
+      tailorShopName: tailor.shopName,
+      tailorAvatar: tailor.image,
+      bookingId: booking.id,
+      bookingCategory: booking.category,
+    });
+    router.push({ pathname: '/(tailor)/chat/[conversationId]', params: { conversationId: conversation.id } });
+  };
 
   if (!booking) {
     return (
@@ -72,7 +90,10 @@ export default function BookingDetail() {
         <DesignPhotosPreviewCard order={booking} onOpen={() => router.push(`/(tailor)/order/${booking.id}/photos` as any)} />
 
         {!isPending && (
-          <Button label="View Full Order Details" onPress={() => router.replace(`/(tailor)/order/${booking.id}` as any)} style={{ marginTop: spacing.xl }} />
+          <>
+            <Button label="Message Customer" variant="outline" icon={<Ionicons name="chatbubble-outline" size={16} color={colors.secondary} />} onPress={messageCustomer} style={{ marginTop: spacing.xl }} />
+            <Button label="View Full Order Details" onPress={() => router.replace(`/(tailor)/order/${booking.id}` as any)} style={{ marginTop: spacing.md }} />
+          </>
         )}
       </ScrollView>
 

@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import ScreenHeader from '@/components/ui/ScreenHeader';
 import { StatusPill } from '@/components/ui/Misc';
 import Button from '@/components/ui/Button';
@@ -13,8 +14,9 @@ import {
 } from '@/components/tailor/OrderDetailShared';
 import { StatusStepper } from '@/components/tailor/StatusStepper';
 import { ReasonSheet, CANCEL_REASONS } from '@/components/tailor/ReasonSheet';
-import { useStore } from '@/store/useStore';
+import { useStore, useMyTailor, ME_TAILOR_ID } from '@/store/useStore';
 import { BOOKING_STAGES } from '@/store/types';
+import { createConversation } from '@/services/chatService';
 import { colors, font, spacing } from '@/theme';
 
 export default function OrderDetail() {
@@ -22,7 +24,24 @@ export default function OrderDetail() {
   const order = useStore((s) => s.bookings.find((b) => b.id === id));
   const advanceBookingStage = useStore((s) => s.advanceBookingStage);
   const cancelBooking = useStore((s) => s.cancelBooking);
+  const tailor = useMyTailor();
   const [cancelVisible, setCancelVisible] = useState(false);
+
+  const messageCustomer = async () => {
+    if (!order) return;
+    const conversation = await createConversation({
+      customerId: order.customerId,
+      customerName: order.customerName,
+      customerAvatar: order.customerAvatar,
+      tailorId: ME_TAILOR_ID,
+      tailorName: tailor.name,
+      tailorShopName: tailor.shopName,
+      tailorAvatar: tailor.image,
+      bookingId: order.id,
+      bookingCategory: order.category,
+    });
+    router.push({ pathname: '/(tailor)/chat/[conversationId]', params: { conversationId: conversation.id } });
+  };
 
   if (!order) {
     return (
@@ -45,6 +64,7 @@ export default function OrderDetail() {
       />
       <ScrollView contentContainerStyle={styles.scroll}>
         <CustomerInfoCard order={order} />
+        <Button label="Message Customer" variant="outline" icon={<Ionicons name="chatbubble-outline" size={16} color={colors.secondary} />} onPress={messageCustomer} style={{ marginTop: spacing.md }} />
         <View style={{ height: spacing.md }} />
         <CustomerNotesCard notes={order.notes} />
         {order.notes && <View style={{ height: spacing.md }} />}

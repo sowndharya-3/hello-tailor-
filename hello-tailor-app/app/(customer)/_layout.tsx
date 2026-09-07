@@ -6,7 +6,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, ColorValue } from 'react-native';
 import { colors } from '@/theme';
-import { useStore } from '@/store/useStore';
+import { useTotalUnread } from '@/store/chatStore';
 
 function TabIcon({ name, color }: { name: keyof typeof Ionicons.glyphMap; color: ColorValue }) {
   return <Ionicons name={name} size={23} color={color} />;
@@ -29,8 +29,7 @@ function Dot() {
 }
 
 export default function CustomerTabLayout() {
-  const notifications = useStore((s) => s.notifications);
-  const hasUnread = notifications.some((n) => n.audience === 'customer' && !n.read);
+  const totalUnreadMessages = useTotalUnread('customer');
 
   return (
     <Tabs
@@ -46,13 +45,13 @@ export default function CustomerTabLayout() {
       <Tabs.Screen name="tailors" options={{ title: 'Tailors', tabBarIcon: ({ color }) => <TabIcon name="cut-outline" color={color} /> }} />
       <Tabs.Screen name="bookings" options={{ title: 'Bookings', tabBarIcon: ({ color }) => <TabIcon name="calendar-outline" color={color} /> }} />
       <Tabs.Screen
-        name="notifications"
+        name="messages/index"
         options={{
-          title: 'Notifications',
+          title: 'Messages',
           tabBarIcon: ({ color }) => (
             <View>
-              <TabIcon name="notifications-outline" color={color} />
-              {hasUnread ? <Dot /> : null}
+              <TabIcon name="chatbubble-outline" color={color} />
+              {totalUnreadMessages > 0 ? <Dot /> : null}
             </View>
           ),
         }}
@@ -60,10 +59,13 @@ export default function CustomerTabLayout() {
       <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color }) => <TabIcon name="person-outline" color={color} /> }} />
 
       {/* Non-tab screens living under this same group — hidden from the tab bar. */}
+      <Tabs.Screen name="notifications" options={{ href: null }} />
       <Tabs.Screen name="search/index" options={{ href: null }} />
       <Tabs.Screen name="category/index" options={{ href: null }} />
       <Tabs.Screen name="tailor/[id]/index" options={{ href: null }} />
       <Tabs.Screen name="tailor/[id]/reviews" options={{ href: null }} />
+      <Tabs.Screen name="chat/[conversationId]/index" options={{ href: null }} />
+      <Tabs.Screen name="chat/[conversationId]/preview" options={{ href: null }} />
     </Tabs>
   );
 }

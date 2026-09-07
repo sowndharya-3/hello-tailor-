@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { colors, font, spacing } from '@/theme';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import ScreenHeader from '@/components/ui/ScreenHeader';
 import Card from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
@@ -16,8 +17,8 @@ import { inr } from '@/components/admin/analyticsData';
 export default function CustomerDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const customer = useStore((s) => s.customers.find((c) => c.id === id));
-  const bookings = useStore((s) => s.bookings.filter((b) => b.customerName === customer?.name));
-  const payments = useStore((s) => s.payments.filter((p) => p.customerName === customer?.name));
+  const bookings = useStore(useShallow((s) => s.bookings.filter((b) => b.customerName === customer?.name)));
+  const payments = useStore(useShallow((s) => s.payments.filter((p) => p.customerName === customer?.name)));
   const updateCustomerStatus = useStore((s) => s.updateCustomerStatus);
   const [confirm, setConfirm] = useState(false);
 

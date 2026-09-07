@@ -6,6 +6,7 @@ import { View, Text, SectionList, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, type, spacing, radius } from '@/theme';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import EmptyState from '@/components/ui/EmptyState';
 
 const typeMeta: Record<string, { icon: keyof typeof Ionicons.glyphMap; label: string }> = {
@@ -21,7 +22,7 @@ const fallbackMeta = { icon: 'notifications-outline' as const, label: 'Other' };
 const metaFor = (t: string) => typeMeta[t] ?? fallbackMeta;
 
 export default function NotificationsTab() {
-  const notifications = useStore((s) => s.notifications.filter((n) => n.audience === 'customer'));
+  const notifications = useStore(useShallow((s) => s.notifications.filter((n) => n.audience === 'customer')));
   const markNotificationRead = useStore((s) => s.markNotificationRead);
   const markAllNotificationsRead = useStore((s) => s.markAllNotificationsRead);
 

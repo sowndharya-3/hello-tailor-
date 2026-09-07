@@ -6,10 +6,11 @@ import StarRating from '@/components/ui/StarRating';
 import EmptyState from '@/components/ui/EmptyState';
 import Card from '@/components/ui/Card';
 import { useStore } from '@/store/useStore';
+import { useShallow } from 'zustand/react/shallow';
 import { colors, font, spacing } from '@/theme';
 
 export default function Reviews() {
-  const reviews = useStore((s) => s.reviews.filter((r) => r.tailorId === s.myTailorId));
+  const reviews = useStore(useShallow((s) => s.reviews.filter((r) => r.tailorId === s.myTailorId)));
   const total = reviews.length;
   const avg = total ? reviews.reduce((s, r) => s + r.rating, 0) / total : 0;
   const dist = [5, 4, 3, 2, 1].map((star) => ({

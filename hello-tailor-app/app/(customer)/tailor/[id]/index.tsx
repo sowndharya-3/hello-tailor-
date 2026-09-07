@@ -7,6 +7,8 @@ import { useStore } from '@/store/useStore';
 import StarRating from '@/components/ui/StarRating';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import { createConversation } from '@/services/chatService';
+import { ME_CUSTOMER } from '@/data/seed';
 
 const { width } = Dimensions.get('window');
 
@@ -17,6 +19,19 @@ export default function TailorProfile() {
   const tailor = tailors.find((t) => t.id === id) ?? tailors[0];
   const tailorReviews = reviews.filter((r) => r.tailorId === tailor.id && r.status === 'Visible');
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+
+  const handleChatWithTailor = async () => {
+    const conversation = await createConversation({
+      customerId: 'me',
+      customerName: ME_CUSTOMER.name,
+      customerAvatar: ME_CUSTOMER.avatar,
+      tailorId: tailor.id,
+      tailorName: tailor.name,
+      tailorShopName: tailor.shopName,
+      tailorAvatar: tailor.image,
+    });
+    router.push({ pathname: '/(customer)/chat/[conversationId]', params: { conversationId: conversation.id } });
+  };
 
   return (
     <View style={styles.wrap}>
@@ -114,6 +129,9 @@ export default function TailorProfile() {
           <Text style={styles.stickyLabel}>Starting at</Text>
           <Text style={styles.stickyPrice}>₹{tailor.startingPrice}</Text>
         </View>
+        <Pressable style={styles.chatIconBtn} onPress={handleChatWithTailor}>
+          <Ionicons name="chatbubble-outline" size={20} color={colors.secondary} />
+        </Pressable>
         <Button label="Book Now" style={{ flex: 1, marginLeft: 16 }} onPress={() => router.push(`/booking/${tailor.id}/category` as any)} />
       </View>
 
@@ -163,6 +181,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border,
     paddingHorizontal: spacing.screenH, paddingVertical: 14, paddingBottom: 24,
   },
+  chatIconBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.infoBg, alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
   stickyLabel: { ...type.supporting, color: colors.textSecondary },
   stickyPrice: { ...type.price, fontSize: 22, color: colors.primary },
   viewerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center' },

@@ -30,7 +30,9 @@ export type CartItem = { id: string; name: string; price: number; image: string;
 
 export type BookingDraft = {
   tailorId?: string;
+  gender?: 'Men' | 'Women' | 'Kids';
   category?: string;
+  service?: string;
   personId?: string;
   clothType?: string;
   material?: string;
@@ -44,6 +46,7 @@ export type BookingDraft = {
   bookingDate?: string;
   deliveryDate?: string;
   method?: Booking['pickupType'];
+  deliveryMethod?: 'Self Pickup' | 'Home Delivery';
   addressId?: string;
   timeSlot?: string;
   notes?: string;
@@ -65,6 +68,9 @@ interface StoreState {
   // ---- shared cross-role data ----
   bookings: Booking[];
   createBooking: (b: Booking) => void;
+  sendQuotation: (id: string, quote: Partial<Booking>) => void;
+  setQuoteStatus: (id: string, status: NonNullable<Booking['quoteStatus']>) => void;
+  payAdvance: (id: string) => void;
   acceptBooking: (id: string) => void;
   rejectBooking: (id: string, reason: string, note?: string) => void;
   advanceBookingStage: (id: string, stage: BookingStatus) => void;
@@ -176,6 +182,11 @@ export const useStore = create<StoreState>((set, get) => ({
       ...s.notifications,
     ],
   })),
+  sendQuotation: (id, quote) => set((s) => ({
+    bookings: s.bookings.map((b) => b.id === id ? { ...b, ...quote, quoteStatus: 'Sent', history: [...b.history, { stage: 'Quotation Sent', at: new Date().toISOString() }] } : b),
+  })),
+  setQuoteStatus: (id, quoteStatus) => set((s) => ({ bookings: s.bookings.map((b) => b.id === id ? { ...b, quoteStatus } : b) })),
+  payAdvance: (id) => set((s) => ({ bookings: s.bookings.map((b) => b.id === id ? { ...b, advancePaid: true, status: 'Accepted', history: [...b.history, { stage: 'Advance Paid', at: new Date().toISOString() }, { stage: 'Accepted', at: new Date().toISOString() }] } : b) })),
   acceptBooking: (id) => set((s) => ({
     bookings: s.bookings.map((b) => b.id === id ? { ...b, status: 'Accepted', history: [...b.history, { stage: 'Accepted', at: new Date().toISOString() }] } : b),
   })),

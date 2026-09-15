@@ -99,6 +99,19 @@ export interface Booking {
   tailorId: string;
   tailorName: string;
   category: string;
+  gender?: 'Men' | 'Women' | 'Kids';
+  service?: string;
+  customerProvidedCloth?: boolean;
+  materialPreference?: string;
+  colourPreference?: string;
+  pickupSlot?: string;
+  finalDeliveryMethod?: 'Self Pickup' | 'Home Delivery';
+  quoteStatus?: 'Pending' | 'Sent' | 'Accepted' | 'Changes Requested' | 'Rejected';
+  stitchingCharge?: number;
+  materialCost?: number;
+  pickupFee?: number;
+  customizationCharge?: number;
+  tailorNotes?: string;
   city: string;
   state: string;
   bookingDate: string; // ISO

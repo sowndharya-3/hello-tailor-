@@ -26,7 +26,6 @@ export default function Profile() {
   const navigate = useNavigate();
   const phone = useStore((s) => s.phone);
   const language = useStore((s) => s.language);
-  const walletBalance = useStore((s) => s.walletBalance);
   const loyaltyPoints = useStore((s) => s.loyaltyPoints);
   const logout = useStore((s) => s.logout);
   const switchRole = useStore((s) => s.switchRole);
@@ -54,7 +53,6 @@ export default function Profile() {
         <NavRow to="/customer/profile/family" icon="👨‍👩‍👧" label="Family Members" sub="Book for family with saved details" />
         <NavRow to="/customer/profile/measurements" icon="📏" label="Measurements" sub="View & manage saved measurements" />
         <NavRow to="/customer/bookings" icon="🧾" label="Orders" sub="Track and view order history" />
-        <NavRow to="/customer/profile/wallet" icon="👛" label="Payments & Wallet" sub={`Balance ₹${walletBalance}`} />
         <NavRow to="/customer/profile/offers" icon="🏷️" label="Offers & Coupons" />
       </Card>
 

@@ -11,10 +11,11 @@ import { ReasonSheet, REJECT_REASONS } from '../components/ReasonSheet';
 export default function BookingDetail() {
   const { id } = useParams<{ id: string }>();
   const booking = useStore((s) => s.bookings.find((b) => b.id === id));
-  const acceptBooking = useStore((s) => s.acceptBooking);
+  const sendQuotation = useStore((s) => s.sendQuotation);
   const rejectBooking = useStore((s) => s.rejectBooking);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [result, setResult] = useState<'accepted' | 'rejected' | null>(null);
+  const [quote, setQuote] = useState({ stitching: '450', material: '0', pickup: '0', delivery: '0', customization: '0', tax: '0', discount: '0', notes: '' });
   const navigate = useNavigate();
 
   if (!booking) {
@@ -30,8 +31,8 @@ export default function BookingDetail() {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center px-8 text-center">
         <span className="text-6xl">✅</span>
-        <h2 className="mt-4 text-[22px] font-semibold text-ht-text">Booking Accepted!</h2>
-        <p className="mt-2 text-[14px] leading-relaxed text-ht-text-secondary">{booking.customerName}'s order has been added to your active orders.</p>
+        <h2 className="mt-4 text-[22px] font-semibold text-ht-text">Quotation Sent</h2>
+        <p className="mt-2 text-[14px] leading-relaxed text-ht-text-secondary">{booking.customerName} can now review the itemised quotation and approve or request changes.</p>
         <Button label="View Order" onClick={() => navigate(`/tailor/order/${booking.id}`, { replace: true })} className="mt-6" />
         <Button label="Back to Bookings" variant="secondary" onClick={() => navigate('/tailor/bookings', { replace: true })} className="mt-3" />
       </div>
@@ -56,16 +57,19 @@ export default function BookingDetail() {
       <div className="flex flex-col gap-3 px-4 pb-28 pt-4 sm:px-6">
         <CustomerInfoCard order={booking} />
         <CustomerNotesCard notes={booking.notes} />
-        <FinancialSummaryCard order={booking} />
+        {booking.quoteStatus === 'Sent' || booking.quoteStatus === 'Accepted' ? <FinancialSummaryCard order={booking} /> : null}
         <MeasurementsPreviewCard order={booking} onOpen={() => navigate(`/tailor/order/${booking.id}/measurements`)} />
         <DesignPhotosPreviewCard order={booking} onOpen={() => navigate(`/tailor/order/${booking.id}/photos`)} />
+        {isPending && booking.quoteStatus !== 'Sent' && <div className="rounded-ht-card border border-ht-border bg-white p-4"><p className="mb-3 font-semibold text-ht-text">Prepare Quotation</p><div className="grid grid-cols-2 gap-3">{[
+          ['stitching','Stitching charge'], ['material','Material cost'], ['pickup','Pickup fee'], ['delivery','Delivery fee'], ['customization','Customization'], ['tax','Tax'], ['discount','Discount'],
+        ].map(([key,label]) => <label key={key} className="text-xs text-ht-text-secondary">{label}<input type="number" min="0" value={quote[key as keyof typeof quote]} onChange={(e) => setQuote({ ...quote, [key]: e.target.value })} className="mt-1 h-11 w-full rounded-ht-input border border-ht-border px-3 text-sm text-ht-text" /></label>)}</div><label className="mt-3 block text-xs text-ht-text-secondary">Tailor notes<textarea value={quote.notes} onChange={(e) => setQuote({ ...quote, notes: e.target.value })} className="mt-1 min-h-20 w-full rounded-ht-input border border-ht-border p-3 text-sm text-ht-text" /></label></div>}
         {!isPending && <Button label="View Full Order Details" onClick={() => navigate(`/tailor/order/${booking.id}`, { replace: true })} className="mt-2" />}
       </div>
 
       {isPending && (
         <div className="fixed inset-x-0 bottom-0 flex gap-3 border-t border-ht-border bg-ht-bg p-4 sm:sticky sm:px-6">
           <Button label="Reject" variant="destructive" onClick={() => setRejectOpen(true)} className="flex-1" />
-          <Button label="Accept Booking" onClick={() => { acceptBooking(booking.id); setResult('accepted'); }} className="flex-[2]" />
+          <Button label="Send Quotation" onClick={() => { const stitchingCharge=Number(quote.stitching)||0, materialCost=Number(quote.material)||0, pickupFee=Number(quote.pickup)||0, deliveryFee=Number(quote.delivery)||0, customizationCharge=Number(quote.customization)||0, tax=Number(quote.tax)||0, discount=Number(quote.discount)||0; const amount=stitchingCharge+materialCost+pickupFee+deliveryFee+customizationCharge; sendQuotation(booking.id,{stitchingCharge,materialCost,pickupFee,deliveryFee,customizationCharge,tax,discount,amount,advanceAmount:Math.ceil((amount+tax-discount)/2),tailorNotes:quote.notes}); setResult('accepted'); }} className="flex-[2]" />
         </div>
       )}
 

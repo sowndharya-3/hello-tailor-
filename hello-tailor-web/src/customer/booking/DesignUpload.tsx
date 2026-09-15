@@ -21,7 +21,7 @@ export default function DesignUpload() {
 
   const submit = () => {
     updateBooking({ designPhotos: photos });
-    navigate(`/customer/booking/${tailorId}/measurement`);
+    navigate(`/customer/booking/${tailorId}/date`);
   };
 
   return (

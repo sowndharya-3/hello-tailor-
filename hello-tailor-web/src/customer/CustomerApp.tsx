@@ -1,5 +1,7 @@
-import { Routes, Route, Navigate, NavLink, Outlet } from 'react-router-dom';
-import { useStore } from '@/store/useStore';
+import { Routes, Route, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
+import Messages from '@/chat/Messages';
+import ChatRoom from '@/chat/ChatRoom';
+import { useUnreadCount } from '@/chat/useUnreadCount';
 import { clsx } from '@/components/ui/clsx';
 
 import Home from '@/customer/home/Home';
@@ -12,6 +14,7 @@ import Bookings from '@/customer/bookings/Bookings';
 import Notifications from '@/customer/notifications/Notifications';
 
 import BookingCategory from '@/customer/booking/Category';
+import BookingGender from '@/customer/booking/Gender';
 import BookingPerson from '@/customer/booking/Person';
 import ClothDetails from '@/customer/booking/ClothDetails';
 import DesignUpload from '@/customer/booking/DesignUpload';
@@ -38,7 +41,6 @@ import Family from '@/customer/profile/Family';
 import AddFamilyMember from '@/customer/profile/AddFamilyMember';
 import Measurements from '@/customer/profile/Measurements';
 import AddMeasurement from '@/customer/profile/AddMeasurement';
-import Wallet from '@/customer/profile/Wallet';
 import Loyalty from '@/customer/profile/Loyalty';
 import Membership from '@/customer/profile/Membership';
 import Referral from '@/customer/profile/Referral';
@@ -62,13 +64,14 @@ const TABS = [
   { to: '/customer', label: 'Home', icon: '🏠', end: true },
   { to: '/customer/tailors', label: 'Tailors', icon: '✂️', end: false },
   { to: '/customer/bookings', label: 'Bookings', icon: '📅', end: false },
-  { to: '/customer/notifications', label: 'Alerts', icon: '🔔', end: false },
+  { to: '/customer/messages', label: 'Messages', icon: '💬', end: false },
   { to: '/customer/profile', label: 'Profile', icon: '👤', end: false },
 ];
 
 function Shell() {
-  const notifications = useStore((s) => s.notifications);
-  const hasUnread = notifications.some((n) => n.audience === 'customer' && !n.read);
+  const hasUnread = useUnreadCount('customer') > 0;
+  const location = useLocation();
+  const inChat = location.pathname.startsWith('/customer/chat/');
 
   return (
     <div className="flex min-h-dvh bg-ht-bg">
@@ -90,7 +93,7 @@ function Shell() {
             >
               <span className="relative text-[18px]">
                 {t.icon}
-                {t.label === 'Alerts' && hasUnread ? (
+                {t.label === 'Messages' && hasUnread ? (
                   <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-ht-error" />
                 ) : null}
               </span>
@@ -101,12 +104,12 @@ function Shell() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="min-h-0 flex-1 pb-20 sm:pb-0">
+        <main className={clsx('min-h-0 flex-1 sm:pb-0', !inChat && 'pb-20')}>
           <Outlet />
         </main>
 
         {/* Mobile bottom tab bar */}
-        <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-ht-border bg-white sm:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        {!inChat && <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-ht-border bg-white sm:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           {TABS.map((t) => (
             <NavLink
               key={t.to}
@@ -121,14 +124,14 @@ function Shell() {
             >
               <span className="relative text-[19px] leading-none">
                 {t.icon}
-                {t.label === 'Alerts' && hasUnread ? (
+                {t.label === 'Messages' && hasUnread ? (
                   <span className="absolute -right-1.5 -top-1 h-2 w-2 rounded-full bg-ht-error" />
                 ) : null}
               </span>
               {t.label}
             </NavLink>
           ))}
-        </nav>
+        </nav>}
       </div>
     </div>
   );
@@ -146,7 +149,10 @@ export default function CustomerApp() {
         <Route path="tailor/:id/reviews" element={<TailorReviews />} />
         <Route path="bookings" element={<Bookings />} />
         <Route path="notifications" element={<Notifications />} />
+        <Route path="messages" element={<Messages role="customer" />} />
+        <Route path="chat/:conversationId" element={<ChatRoom role="customer" />} />
 
+        <Route path="booking/:tailorId/gender" element={<BookingGender />} />
         <Route path="booking/:tailorId/category" element={<BookingCategory />} />
         <Route path="booking/:tailorId/person" element={<BookingPerson />} />
         <Route path="booking/:tailorId/cloth-details" element={<ClothDetails />} />
@@ -174,7 +180,6 @@ export default function CustomerApp() {
         <Route path="profile/family/add" element={<AddFamilyMember />} />
         <Route path="profile/measurements" element={<Measurements />} />
         <Route path="profile/measurements/add" element={<AddMeasurement />} />
-        <Route path="profile/wallet" element={<Wallet />} />
         <Route path="profile/loyalty" element={<Loyalty />} />
         <Route path="profile/membership" element={<Membership />} />
         <Route path="profile/referral" element={<Referral />} />

@@ -56,6 +56,27 @@ button {
   cursor: pointer;
 }
 
+.booking-cta {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(56px + env(safe-area-inset-bottom));
+  z-index: 35;
+  border-top: 1px solid var(--color-ht-border);
+  background: var(--color-ht-card);
+  padding: 14px 16px;
+}
+
+@media (max-width: 639px) {
+  main .fixed.inset-x-0.bottom-0.border-t {
+    bottom: calc(56px + env(safe-area-inset-bottom)) !important;
+    z-index: 35;
+  }
+}
+
+@media (min-width: 640px) {
+  .booking-cta { left: 14rem; bottom: 0; padding-inline: 24px; }
+}
+
 /* Scrollbar tuned to feel native on desktop, invisible-but-functional on touch */
 ::-webkit-scrollbar {
   width: 8px;
@@ -64,4 +85,24 @@ button {
 ::-webkit-scrollbar-thumb {
   background: var(--color-ht-border);
   border-radius: 8px;
+}
+
+/* Splash screen logo — short, elegant fade+scale-in, not a bouncy/childish animation. */
+@keyframes splash-logo-in {
+  0% { opacity: 0; transform: scale(0.86); }
+  60% { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes splash-bg-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.splash-bg {
+  animation: splash-bg-in 500ms ease-out both;
+}
+.splash-logo {
+  animation: splash-logo-in 900ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both;
+}
+.splash-tagline {
+  animation: splash-bg-in 600ms ease-out 500ms both;
 }

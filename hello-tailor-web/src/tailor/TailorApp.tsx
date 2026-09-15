@@ -1,4 +1,4 @@
-// Tailor role shell — 5 destinations (Dashboard/Bookings/Orders/Income/Profile) as a bottom tab
+// Tailor role shell — 5 destinations (Dashboard/Bookings/Messages/Orders/Profile) as a bottom tab
 // bar below `sm`, a left sidebar at `sm:`+. Detail/sub-screens (booking/order detail, profile
 // editors, membership, etc.) render full-width with their own ScreenHeader back button, and the
 // bottom tab bar hides on mobile while one of those is open (matches the source app's stack-on-
@@ -26,20 +26,25 @@ import Featured from './featured/Featured';
 import Reviews from './reviews/Reviews';
 import Notifications from './notifications/Notifications';
 import { clsx } from '@/components/ui/clsx';
+import Messages from '@/chat/Messages';
+import ChatRoom from '@/chat/ChatRoom';
+import { useUnreadCount } from '@/chat/useUnreadCount';
 
 const TABS = [
   { to: '/tailor', label: 'Dashboard', icon: '🏠', end: true },
   { to: '/tailor/bookings', label: 'Bookings', icon: '📅', end: false },
+  { to: '/tailor/messages', label: 'Messages', icon: '💬', end: false },
   { to: '/tailor/orders', label: 'Orders', icon: '🧾', end: false },
-  { to: '/tailor/income', label: 'Income', icon: '📊', end: false },
   { to: '/tailor/profile', label: 'Profile', icon: '👤', end: false },
 ];
 
-const TAB_ROOTS = ['/tailor', '/tailor/bookings', '/tailor/orders', '/tailor/income', '/tailor/profile'];
+const TAB_ROOTS = ['/tailor', '/tailor/bookings', '/tailor/messages', '/tailor/orders', '/tailor/profile'];
 
 export default function TailorApp() {
   const location = useLocation();
   const onTabRoot = TAB_ROOTS.includes(location.pathname);
+  const unread = useUnreadCount('tailor');
+  const inChat = location.pathname.startsWith('/tailor/chat/');
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[1400px] sm:pl-56">
@@ -60,12 +65,13 @@ export default function TailorApp() {
             >
               <span className="text-lg">{tab.icon}</span>
               {tab.label}
+              {tab.label === 'Messages' && unread > 0 && <span aria-label={`${unread} unread messages`} className="rounded-full bg-ht-error px-1.5 text-[10px] text-white">{unread}</span>}
             </NavLink>
           ))}
         </nav>
       </aside>
 
-      <main className="min-w-0 flex-1 pb-16 sm:pb-0">
+      <main className={clsx('min-w-0 flex-1 sm:pb-0', !inChat && 'pb-16')}>
         <Routes>
           <Route index element={<Dashboard />} />
           <Route path="bookings" element={<Bookings />} />
@@ -88,6 +94,8 @@ export default function TailorApp() {
           <Route path="featured" element={<Featured />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="notifications" element={<Notifications />} />
+          <Route path="messages" element={<Messages role="tailor" />} />
+          <Route path="chat/:conversationId" element={<ChatRoom role="tailor" />} />
         </Routes>
       </main>
 
@@ -107,6 +115,7 @@ export default function TailorApp() {
             >
               <span className="text-lg leading-none">{tab.icon}</span>
               {tab.label}
+              {tab.label === 'Messages' && unread > 0 && <span aria-label={`${unread} unread messages`} className="rounded-full bg-ht-error px-1.5 text-[10px] text-white">{unread}</span>}
             </NavLink>
           ))}
         </nav>

@@ -33,7 +33,7 @@ export default function MeasurementStep() {
       addMeasurement({ id, label, personId: booking.personId ?? 'self', category: booking.category ?? '', date: 'Today', fields: values });
       updateBooking({ measurementId: id });
     }
-    navigate(`/customer/booking/${tailorId}/date`);
+    navigate(`/customer/booking/${tailorId}/cloth-details`);
   };
 
   return (

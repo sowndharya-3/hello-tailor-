@@ -5,6 +5,7 @@ import Badge from '@/components/ui/Badge';
 import Avatar from '@/components/ui/Avatar';
 import type { Booking } from '@/store/types';
 import { formatCurrency, formatDate } from '../lib/status';
+import ChatEntryButton from '@/chat/ChatEntryButton';
 
 export function CustomerInfoCard({ order }: { order: Booking }) {
   return (
@@ -24,6 +25,7 @@ export function CustomerInfoCard({ order }: { order: Booking }) {
         <p>📍 {order.location}</p>
         <p>{order.pickupType === 'Home Delivery' || order.pickupType === 'Tailor Pickup' ? '🏠' : '🏬'} {order.pickupType}</p>
       </div>
+      <ChatEntryButton role="tailor" booking={order} />
     </Card>
   );
 }

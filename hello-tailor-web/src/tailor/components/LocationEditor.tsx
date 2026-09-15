@@ -22,7 +22,7 @@ export function LocationEditor({ value, onChange, onSave }: { value: LocationVal
 
   const set = (k: keyof LocationValue, v: string) => onChange({ ...value, [k]: v });
 
-  const useCurrentLocation = () => {
+  const handleCurrentLocation = () => {
     onChange({ address: '12, MG Road, Near Central Mall', landmark: 'Opposite Axis Bank', city: 'Bengaluru', state: 'Karnataka', pincode: '560001' });
     setSearch('MG Road, Bengaluru');
   };
@@ -50,7 +50,7 @@ export function LocationEditor({ value, onChange, onSave }: { value: LocationVal
           {SUGGESTIONS.map((s) => (
             <button
               key={s}
-              onClick={() => { setSearch(s); setShowSuggestions(false); useCurrentLocation(); }}
+              onClick={() => { setSearch(s); setShowSuggestions(false); handleCurrentLocation(); }}
               className="flex w-full items-center gap-2 border-b border-ht-border px-3.5 py-3 text-left text-[13px] text-ht-text last:border-b-0"
             >
               📍 {s}
@@ -65,7 +65,7 @@ export function LocationEditor({ value, onChange, onSave }: { value: LocationVal
         <span className="absolute top-[42%] text-2xl">📍</span>
       </div>
 
-      <button onClick={useCurrentLocation} className="mb-5 flex items-center gap-1.5 text-[13px] font-semibold text-ht-ocean">
+      <button onClick={handleCurrentLocation} className="mb-5 flex items-center gap-1.5 text-[13px] font-semibold text-ht-ocean">
         🧭 Use my current location
       </button>
 

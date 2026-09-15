@@ -35,14 +35,20 @@ export default function Profile() {
 
   return (
     <div className="pb-10">
-      <div className="relative h-[130px] bg-ht-navy">
+      <div className="relative h-[180px] bg-ht-navy">
         <img src={tailor.cover} alt="" className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-[rgba(23,59,87,0.35)]" />
+        {/* Gradient fade (not a flat tint) so the transition into the avatar zone reads as
+            deliberate rather than the banner and avatar visually colliding at a hard edge. */}
+        <div className="absolute inset-0 bg-gradient-to-t from-ht-navy/70 via-ht-navy/10 to-transparent" />
       </div>
 
-      <div className="-mt-11 flex flex-col items-center px-4">
-        <img src={tailor.image} alt="" className="h-[88px] w-[88px] rounded-full border-[3px] border-white object-cover" />
-        <p className="mt-2 text-[19px] font-semibold text-ht-text">{tailor.name}</p>
+      <div className="-mt-12 flex flex-col items-center px-4">
+        <img
+          src={tailor.image}
+          alt=""
+          className="h-[96px] w-[96px] rounded-full border-4 border-white object-cover shadow-[0_4px_14px_rgba(23,59,87,0.25)]"
+        />
+        <p className="mt-3 text-[19px] font-semibold text-ht-text">{tailor.name}</p>
         <p className="text-[13px] text-ht-text-secondary">{tailor.shopName}</p>
         <div className="mt-1.5 flex gap-2">
           {tailor.verified && <Badge label="Verified" tone="success" />}
@@ -98,7 +104,7 @@ export default function Profile() {
           </div>
         </Card>
 
-        <button onClick={switchRole} className="mt-8 flex w-full items-center justify-center gap-2 py-3.5 text-[14px] font-semibold text-ht-ocean">
+        <button onClick={() => { switchRole(); navigate('/role-select', { replace: true }); }} className="mt-8 flex w-full items-center justify-center gap-2 py-3.5 text-[14px] font-semibold text-ht-ocean">
           🔀 Switch Role
         </button>
         <button

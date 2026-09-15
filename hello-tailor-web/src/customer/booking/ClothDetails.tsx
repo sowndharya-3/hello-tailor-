@@ -32,17 +32,25 @@ export default function ClothDetails() {
 
   return (
     <div className="pb-24">
-      <ScreenHeader title="Cloth Details" subtitle={booking.category} />
+      <ScreenHeader title="Cloth / Material" subtitle={booking.category} />
       <div className="px-4 pt-4 sm:px-6"><StepProgress step={3} total={11} label="Cloth Details" /></div>
       <div className="flex flex-col gap-5 p-4 sm:px-6">
         <div>
-          <p className="mb-2.5 text-[14px] font-medium text-ht-text">Cloth Type / Material</p>
+          <p className="mb-2.5 text-[14px] font-semibold text-ht-text">Who will provide the cloth/material?</p>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => setProvided(true)} className={clsx('rounded-ht-card border p-4 text-left', provided ? 'border-ht-ocean bg-ht-info-bg' : 'border-ht-border bg-white')}><span className="font-semibold text-ht-text">I will provide</span><span className="mt-1 block text-xs text-ht-text-secondary">Choose drop-off or tailor pickup</span></button>
+            <button onClick={() => setProvided(false)} className={clsx('rounded-ht-card border p-4 text-left', !provided ? 'border-ht-ocean bg-ht-info-bg' : 'border-ht-border bg-white')}><span className="font-semibold text-ht-text">Tailor will provide</span><span className="mt-1 block text-xs text-ht-text-secondary">Price confirmed in quotation</span></button>
+          </div>
+        </div>
+        <div>
+          <p className="mb-2.5 text-[14px] font-medium text-ht-text">{provided ? 'Material Type' : 'Preferred Material'}</p>
           <div className="flex flex-wrap gap-2">
             {clothOptions.map((c) => (
               <button key={c} onClick={() => setClothType(c)} className={clsx('rounded-full border px-3.5 py-2.5 text-[13px] font-medium', clothType === c ? 'border-ht-ocean bg-ht-ocean text-white' : 'border-ht-border bg-ht-card text-ht-text')}>{c}</button>
             ))}
           </div>
         </div>
+        {provided && <>
         <div>
           <p className="mb-2.5 text-[14px] font-medium text-ht-text">Colour</p>
           <div className="flex flex-wrap gap-2">
@@ -62,16 +70,10 @@ export default function ClothDetails() {
             <button onClick={() => setQuantity((q) => q + 1)} className="flex h-10 w-10 items-center justify-center rounded-full bg-ht-disabled-bg">+</button>
           </div>
         </div>
-        <button onClick={() => setProvided((v) => !v)} className="flex items-center gap-3 text-left">
-          <div className="flex-1">
-            <p className="text-[14px] font-medium text-ht-text">I will provide the cloth</p>
-            <p className="text-[12px] text-ht-text-secondary">Turn off if you'd like the tailor to source the fabric for you</p>
-          </div>
-          <span className="text-2xl">{provided ? '🟢' : '⚪'}</span>
-        </button>
+        </>}
         <div>
           <p className="mb-2.5 text-[14px] font-medium text-ht-text">Notes <span className="font-normal text-ht-text-secondary">(optional)</span></p>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any special instructions for the cloth..." className="min-h-[90px] w-full rounded-ht-input border-[1.5px] border-ht-border p-3 text-[14px] text-ht-text outline-none" />
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={provided ? 'Any special instructions for the cloth...' : 'Pattern, style and budget preference...'} className="min-h-[90px] w-full rounded-ht-input border-[1.5px] border-ht-border p-3 text-[14px] text-ht-text outline-none" />
         </div>
       </div>
       <div className="fixed inset-x-0 bottom-0 border-t border-ht-border bg-ht-card px-4 py-3.5 sm:left-56 sm:px-6">

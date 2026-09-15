@@ -13,7 +13,7 @@ export default function BookingPerson() {
 
   const choose = (personId: string) => {
     updateBooking({ personId });
-    navigate(`/customer/booking/${tailorId}/cloth-details`);
+    navigate(`/customer/booking/${tailorId}/measurement`);
   };
 
   return (

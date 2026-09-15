@@ -44,7 +44,7 @@ export default function TailorCard({ tailor, wide }: { tailor: Tailor; wide?: bo
             <Link to={`/customer/tailor/${tailor.id}`}>
               <Button label="Profile" variant="secondary" fullWidth={false} className="min-h-[38px] px-3 text-[13px]" />
             </Link>
-            <Link to={`/customer/booking/${tailor.id}/category`}>
+            <Link to={`/customer/booking/${tailor.id}/gender`}>
               <Button label="Book Now" fullWidth={false} className="min-h-[38px] px-3 text-[13px]" />
             </Link>
           </div>

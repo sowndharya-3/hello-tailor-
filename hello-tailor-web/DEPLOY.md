@@ -9,6 +9,8 @@ npm run build
 
 Produces `dist/` — a fully static site (HTML/CSS/JS + `.htaccess`). This is everything that needs to go on the server; nothing else runs server-side.
 
+The current web build includes the customer and tailor message experience: text and photo attachments, design approvals, revision requests, retry states, unread counts, and notification links. This is a frontend demo with in-memory data: messages, approvals, and login state reset on refresh. Real accounts, file storage, push delivery, and a backend are not connected.
+
 If the subdomain serves from its own document root (the normal Hostinger setup — e.g. `app.yourdomain.com` → `public_html/app/`), the default build is correct as-is.
 
 If you instead need the site reachable under a **sub-path** on an existing domain (e.g. `yourdomain.com/tailor/`), set the base path before building:

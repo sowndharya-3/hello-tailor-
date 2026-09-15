@@ -6,6 +6,7 @@ import Card from '@/components/ui/Card';
 import { useStore } from '@/store/useStore';
 import { clsx } from '@/components/ui/clsx';
 import { timeAgo } from '../lib/status';
+import ChatUpdates from '@/chat/ChatUpdates';
 
 const ICONS: Record<string, string> = {
   booking: '📅',
@@ -33,6 +34,7 @@ export default function Notifications() {
     <div>
       <ScreenHeader title="Notifications" right={<button onClick={() => markAllRead('tailor')} className="text-[12px] font-medium text-ht-ocean">Mark all read</button>} />
       <div className="mx-auto max-w-2xl px-4 py-4 sm:px-6">
+        <ChatUpdates role="tailor" />
         {notifications.length === 0 ? (
           <EmptyState icon="🔔" title="No Notifications" message="You're all caught up. New alerts will show up here." />
         ) : (

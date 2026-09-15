@@ -1,6 +1,7 @@
 import { useStore } from '@/store/useStore';
 import { useShallow } from 'zustand/react/shallow';
 import EmptyState from '@/components/ui/EmptyState';
+import ChatUpdates from '@/chat/ChatUpdates';
 
 const typeMeta: Record<string, { icon: string; label: string }> = {
   booking: { icon: '📅', label: 'Booking' },
@@ -29,6 +30,7 @@ export default function Notifications() {
         <button onClick={() => markAllNotificationsRead('customer')} className="text-[13px] font-semibold text-ht-ocean">Mark all read</button>
       </div>
       <div className="px-4 pb-6 sm:px-6">
+        <ChatUpdates role="customer" />
         {groups.length ? groups.map((g) => (
           <div key={g.title} className="mb-4">
             <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-ht-text-secondary">{g.title}</p>

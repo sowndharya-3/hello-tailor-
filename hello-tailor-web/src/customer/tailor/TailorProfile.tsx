@@ -4,6 +4,7 @@ import { useStore } from '@/store/useStore';
 import StarRating from '@/components/ui/StarRating';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import ChatEntryButton from '@/chat/ChatEntryButton';
 
 export default function TailorProfile() {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +42,7 @@ export default function TailorProfile() {
           <div className="flex items-center gap-2 text-[14px] text-ht-text">📦 Delivery in {tailor.deliveryDays} days</div>
         </div>
 
+        <ChatEntryButton role="customer" tailorId={tailor.id} />
         <h2 className="mt-6 mb-2.5 text-[16px] font-semibold text-ht-text">About</h2>
         <p className="text-[14px] leading-relaxed text-ht-text-secondary">{tailor.about}</p>
 
@@ -89,7 +91,7 @@ export default function TailorProfile() {
           <p className="text-[12px] text-ht-text-secondary">Starting at</p>
           <p className="text-[22px] font-semibold text-ht-navy">₹{tailor.startingPrice}</p>
         </div>
-        <Link to={`/customer/booking/${tailor.id}/category`} className="ml-4 flex-1">
+        <Link to={`/customer/booking/${tailor.id}/gender`} className="ml-4 flex-1">
           <Button label="Book Now" />
         </Link>
       </div>

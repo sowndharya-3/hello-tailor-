@@ -12,9 +12,18 @@ export interface CsvColumn<T> {
   value: (row: T) => string | number;
 }
 
+// Guards against CSV/formula injection: a cell starting with =, +, -, @ (or tab/CR) is
+// interpreted as a formula by Excel/Sheets/LibreOffice when the file is opened, which lets
+// data that ends up in an exported cell (e.g. a customer or tailor name) execute arbitrary
+// spreadsheet formulas on whoever opens the export. Prefixing such cells with a leading
+// single-quote neutralizes the formula while keeping the visible text unchanged in every
+// major spreadsheet app.
+const FORMULA_TRIGGER = /^[=+\-@\t\r]/;
+
 function toCsv<T>(columns: CsvColumn<T>[], rows: T[]): string {
   const escape = (v: string | number) => {
-    const s = String(v);
+    let s = String(v);
+    if (FORMULA_TRIGGER.test(s)) s = `'${s}`;
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const header = columns.map((c) => escape(c.header)).join(',');

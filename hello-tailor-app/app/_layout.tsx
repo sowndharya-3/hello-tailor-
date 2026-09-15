@@ -41,6 +41,7 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
+        <Stack.Screen name="onboarding/index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="role-select" />
         <Stack.Screen name="(customer)" />

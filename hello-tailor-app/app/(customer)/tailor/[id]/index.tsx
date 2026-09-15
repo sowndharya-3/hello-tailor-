@@ -41,22 +41,28 @@ export default function TailorProfile() {
           <Pressable style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={22} color={colors.text} />
           </Pressable>
-          <Image source={{ uri: tailor.image }} style={styles.shopImg} />
         </View>
 
-        <View style={styles.headerBlock}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        {/* Avatar straddles the banner/content boundary via a negative marginTop on this whole
+            centered block (same proven pattern as the tailor's own profile screen) — clean flow
+            layout, not absolute positioning, so it can't collide with the text below it the way
+            the old absolutely-positioned avatar + separately-padded text block used to. */}
+        <View style={styles.profileBlock}>
+          <Image source={{ uri: tailor.image }} style={styles.shopImg} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm }}>
             <Text style={styles.shopName}>{tailor.shopName}</Text>
             {tailor.verified ? <Ionicons name="checkmark-circle" size={18} color={colors.secondary} /> : null}
           </View>
           <Text style={styles.tailorName}>{tailor.name} • {tailor.experienceYears} yrs experience</Text>
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
             <StarRating rating={tailor.rating} reviewCount={tailor.reviewCount} />
             <Badge label={tailor.isOpen ? 'Open Now' : 'Closed'} tone={tailor.isOpen ? 'success' : 'error'} />
             {tailor.featured ? <Badge label="Featured" tone="gold" /> : null}
             <Badge label={tailor.type} tone="navy" withIcon={false} />
           </View>
+        </View>
 
+        <View style={styles.headerBlock}>
           <View style={styles.infoGrid}>
             <View style={styles.infoItem}>
               <Ionicons name="location-outline" size={16} color={colors.secondary} />
@@ -151,12 +157,13 @@ export default function TailorProfile() {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg },
-  cover: { width: '100%', height: 190 },
-  backBtn: { position: 'absolute', top: 16, left: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', ...shadow.card },
-  shopImg: { width: 84, height: 84, borderRadius: 16, borderWidth: 3, borderColor: colors.white, position: 'absolute', bottom: -32, left: spacing.screenH },
-  headerBlock: { paddingHorizontal: spacing.screenH, paddingTop: 44 },
-  shopName: { ...type.pageTitle, fontSize: 21, color: colors.text },
-  tailorName: { ...type.body, color: colors.textSecondary, marginTop: 2 },
+  cover: { width: '100%', height: 200, backgroundColor: colors.disabledBg },
+  backBtn: { position: 'absolute', top: 54, left: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', ...shadow.card },
+  profileBlock: { alignItems: 'center', marginTop: -48, paddingHorizontal: spacing.screenH },
+  shopImg: { width: 96, height: 96, borderRadius: 48, borderWidth: 4, borderColor: colors.white, backgroundColor: colors.disabledBg },
+  headerBlock: { paddingHorizontal: spacing.screenH, paddingTop: spacing.section },
+  shopName: { ...type.pageTitle, fontSize: 21, color: colors.text, textAlign: 'center' },
+  tailorName: { ...type.body, color: colors.textSecondary, marginTop: 2, textAlign: 'center' },
   infoGrid: { marginTop: spacing.lg, gap: 8 },
   infoItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   infoText: { ...type.body, color: colors.text },

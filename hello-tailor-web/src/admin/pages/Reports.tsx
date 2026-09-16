@@ -77,7 +77,12 @@ function inRange(iso: string, from: string, to: string) {
 }
 
 function csvEscape(value: string | number) {
-  const s = String(value);
+  let s = String(value);
+  // CSV formula injection: a field starting with =, +, -, @, tab or CR is interpreted as a
+  // formula by Excel/Sheets when the file is opened, and customer/tailor names are
+  // user-supplied data (booking form input), not something this export controls. Prefixing
+  // with a leading apostrophe forces spreadsheet apps to treat the cell as plain text.
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

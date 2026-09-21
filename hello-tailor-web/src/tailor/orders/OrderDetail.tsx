@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { useStore } from '@/store/useStore';
 import { BOOKING_STAGES } from '@/store/types';
-import { CustomerInfoCard, CustomerNotesCard, FinancialSummaryCard, MeasurementsPreviewCard, DesignPhotosPreviewCard } from '../components/OrderDetailShared';
+import { BookingItemsCard, CustomerInfoCard, CustomerNotesCard, FinancialSummaryCard, MeasurementsPreviewCard, DesignPhotosPreviewCard } from '../components/OrderDetailShared';
 import { StatusStepper } from '../components/StatusStepper';
 import { ReasonSheet, CANCEL_REASONS } from '../components/ReasonSheet';
 
@@ -41,6 +41,7 @@ export default function OrderDetail() {
       />
       <div className="flex flex-col gap-3 px-4 pb-28 pt-4 sm:px-6">
         <CustomerInfoCard order={order} />
+        <BookingItemsCard order={order} />
         <CustomerNotesCard notes={order.notes} />
 
         {order.status === 'Cancelled' && order.cancelReason && (

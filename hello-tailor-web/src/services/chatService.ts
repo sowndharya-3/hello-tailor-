@@ -55,6 +55,17 @@ export async function sendAttachment(
   return useChatStore.getState().sendAttachmentMessage(conversationId, senderType, senderId, messageType, fileUri, photoType, caption);
 }
 
+export async function sendVoiceMessage(
+  conversationId: string,
+  senderType: SenderType,
+  senderId: string,
+  audioDataUrl: string,
+  durationSec: number,
+  mimeType: string,
+): Promise<Message> {
+  return useChatStore.getState().sendVoiceMessage(conversationId, senderType, senderId, audioDataUrl, durationSec, mimeType);
+}
+
 export async function uploadDesignForApproval(
   conversationId: string,
   bookingId: string,

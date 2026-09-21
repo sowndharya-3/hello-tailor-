@@ -16,6 +16,7 @@ import Notifications from '@/customer/notifications/Notifications';
 import BookingCategory from '@/customer/booking/Category';
 import BookingGender from '@/customer/booking/Gender';
 import BookingPerson from '@/customer/booking/Person';
+import BookingItems from '@/customer/booking/Items';
 import ClothDetails from '@/customer/booking/ClothDetails';
 import DesignUpload from '@/customer/booking/DesignUpload';
 import MeasurementStep from '@/customer/booking/Measurement';
@@ -157,6 +158,7 @@ export default function CustomerApp() {
         <Route path="booking/:tailorId/person" element={<BookingPerson />} />
         <Route path="booking/:tailorId/cloth-details" element={<ClothDetails />} />
         <Route path="booking/:tailorId/design-upload" element={<DesignUpload />} />
+        <Route path="booking/:tailorId/items" element={<BookingItems />} />
         <Route path="booking/:tailorId/measurement" element={<MeasurementStep />} />
         <Route path="booking/:tailorId/measurement-history" element={<MeasurementHistory />} />
         <Route path="booking/:tailorId/date" element={<BookingDate />} />

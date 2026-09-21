@@ -3,11 +3,13 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, CheckCheck, Clock, Plus, Send } from 'lucide-react';
 import { useChatStore, useConversationById, useMessages, useIsTyping, simulateTypingPulse } from '@/store/chatStore';
 import { useStore } from '@/store/useStore';
-import { getMessages, markMessageRead, retryMessage, sendAttachment, sendMessage, uploadDesignForApproval } from '@/services/chatService';
+import { getMessages, markMessageRead, retryMessage, sendAttachment, sendMessage, sendVoiceMessage, uploadDesignForApproval } from '@/services/chatService';
 import type { DesignVersion, Message, PhotoType } from '@/store/chatTypes';
 import AttachmentDialog from './AttachmentDialog';
 import DesignReviewDialog from './DesignReviewDialog';
 import ChatDialog from './ChatDialog';
+import VoiceMessage from './VoiceMessage';
+import VoiceRecorder from './VoiceRecorder';
 import { belongsTo, unreadCount, type ChatRole } from './helpers';
 
 const STATUS_LABELS = { pending: 'Waiting for Approval', approved: 'Design Approved', changes_requested: 'Changes Requested', revised: 'Revised' };
@@ -68,6 +70,12 @@ function ChatRoom({ role, conversationId }: { role: ChatRole; conversationId: st
     finally { setSending(false); }
   }
 
+  async function sendVoice(dataUrl: string, durationSec: number, mimeType: string) {
+    setSending(true); setError('');
+    try { await sendVoiceMessage(conversationId, role, senderId, dataUrl, durationSec, mimeType); simulateTypingPulse(conversationId, role === 'customer' ? 'tailor' : 'customer'); }
+    finally { setSending(false); }
+  }
+
   function photoButton(url: string, label: string) {
     return <button type="button" aria-label={`View ${label}`} onClick={() => setImage({ url, label })} className="block w-full overflow-hidden rounded-xl bg-ht-bg">
       <img src={url} alt={label} loading="lazy" className="max-h-72 w-full object-cover" />
@@ -97,7 +105,7 @@ function ChatRoom({ role, conversationId }: { role: ChatRole; conversationId: st
             <button type="button" className="rounded-ht-button border border-ht-ocean p-3 font-semibold text-ht-ocean" onClick={() => setReview({ version, mode: 'changes' })}>Request Changes</button>
           </div>}
         </div> : <>
-          {message.attachments?.map((file) => <div key={file.id} className="mb-2"><p className="mb-2 text-xs font-semibold uppercase tracking-wide">{file.photoType ?? 'Photo'}</p>{photoButton(file.fileUrl, file.photoType ?? 'Photo')}</div>)}
+          {message.messageType === 'voice' && message.attachments?.[0] ? <VoiceMessage id={message.id} src={message.attachments[0].fileUrl} durationSec={message.attachments[0].durationSec ?? 0} mine={mine} /> : message.attachments?.map((file) => <div key={file.id} className="mb-2"><p className="mb-2 text-xs font-semibold uppercase tracking-wide">{file.photoType ?? 'Photo'}</p>{photoButton(file.fileUrl, file.photoType ?? 'Photo')}</div>)}
           {(message.text || message.caption) && <p className="whitespace-pre-wrap break-words">{message.text || message.caption}</p>}
         </>}
         <div className="mt-2 flex items-center justify-end gap-1.5 text-[10px] opacity-80"><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</time>
@@ -123,13 +131,16 @@ function ChatRoom({ role, conversationId }: { role: ChatRole; conversationId: st
     <div className="shrink-0 border-t border-ht-border bg-white px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       {isTyping && <p role="status" className="mb-2 px-2 text-xs text-ht-text-secondary">{otherName} is typing<span className="animate-pulse">…</span></p>}
       {error && <p role="alert" className="mb-2 px-2 text-sm text-ht-error">{error}</p>}
+      <VoiceRecorder disabled={sending} showMic={!text.trim()} onSend={sendVoice} form={(mic, notice) => <>
+{notice}
       <form className="flex items-end gap-2" onSubmit={(e) => { e.preventDefault(); void sendText(); }}>
-        <button type="button" aria-label="Add attachment" onClick={() => setAttachment(role === 'customer' ? 'Reference Design' : 'Progress Photo')} className="mb-1 rounded-full bg-ht-info-bg p-3 text-ht-ocean"><Plus size={20} /></button>
+        <button type="button" aria-label="Add attachment" onClick={() => setAttachment(role === 'customer' ? 'Reference Design' : 'Progress Photo')} className="mb-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ht-info-bg text-ht-ocean"><Plus size={20} /></button>
         <textarea aria-label="Message" value={text} maxLength={4000} disabled={sending} onChange={(e) => setText(e.target.value)} placeholder="Type a message…" rows={2}
           onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void sendText(); } }}
           className="min-w-0 flex-1 resize-none rounded-2xl bg-ht-bg p-3 text-sm outline-ht-ocean" />
-        <button type="submit" aria-label="Send message" disabled={!text.trim() || sending} className="mb-1 rounded-full bg-ht-ocean p-3 text-white disabled:bg-ht-disabled-bg disabled:text-ht-disabled-text"><Send size={20} /></button>
+        {text.trim() ? <button type="submit" aria-label="Send message" disabled={sending} className="mb-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ht-ocean text-white disabled:bg-ht-disabled-bg disabled:text-ht-disabled-text"><Send size={20} /></button> : mic}
       </form>
+      </>} />
     </div>
     {attachment && <AttachmentDialog role={role} hasBooking={Boolean(conversation.bookingId)} initialType={attachment} onClose={() => setAttachment(null)} onSend={async (url, photoType, caption) => {
       if (role === 'tailor' && photoType === 'Final Design' && conversation.bookingId) await uploadDesignForApproval(conversationId, conversation.bookingId, senderId, url, caption);

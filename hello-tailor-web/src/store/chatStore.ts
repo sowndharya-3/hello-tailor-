@@ -61,6 +61,14 @@ interface ChatState {
     photoType: PhotoType,
     caption?: string,
   ) => Message;
+  sendVoiceMessage: (
+    conversationId: string,
+    senderType: SenderType,
+    senderId: string,
+    audioDataUrl: string,
+    durationSec: number,
+    mimeType: string,
+  ) => Message;
   uploadDesignForApproval: (
     conversationId: string,
     bookingId: string,
@@ -152,6 +160,26 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messageType,
       caption,
       attachments: [attachment],
+      status: 'sending',
+      createdAt: new Date().toISOString(),
+    };
+    appendMessage(set, message);
+    progressMessageDelivery(set, get, message);
+    return message;
+  },
+
+  sendVoiceMessage: (conversationId, senderType, senderId, audioDataUrl, durationSec, mimeType) => {
+    const conv = get().conversations.find((c) => c.id === conversationId);
+    const messageId = nextId('MSG');
+    const message: Message = {
+      id: messageId,
+      conversationId,
+      senderId,
+      senderType,
+      receiverId: conv ? (senderType === 'customer' ? conv.tailorId : conv.customerId) : undefined,
+      bookingId: conv?.bookingId,
+      messageType: 'voice',
+      attachments: [{ id: nextId('ATT'), messageId, fileUrl: audioDataUrl, fileType: 'audio', durationSec, mimeType }],
       status: 'sending',
       createdAt: new Date().toISOString(),
     };
@@ -307,6 +335,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 }));
 
+const formatDuration = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
+
 function appendMessage(set: (fn: (s: ChatState) => Partial<ChatState>) => void, message: Message) {
   set((s) => {
     const list = s.messagesByConversation[message.conversationId] ?? [];
@@ -321,7 +351,9 @@ function appendMessage(set: (fn: (s: ChatState) => Partial<ChatState>) => void, 
               ? 'Sent a design for your approval'
               : message.messageType === 'change_request'
                 ? 'Requested changes to the design'
-                : message.caption || 'Sent an attachment';
+                : message.messageType === 'voice'
+                  ? `🎤 Voice message (${formatDuration(message.attachments?.[0]?.durationSec ?? 0)})`
+                  : message.caption || 'Sent an attachment';
         return {
           ...c,
           lastMessage: preview,

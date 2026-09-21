@@ -9,6 +9,7 @@ export default function DesignUpload() {
   const { tailorId } = useParams<{ tailorId: string }>();
   const navigate = useNavigate();
   const updateBooking = useStore((s) => s.updateBooking);
+  const commitDraftItem = useStore((s) => s.commitDraftItem);
   const [photos, setPhotos] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -20,8 +21,11 @@ export default function DesignUpload() {
   const remove = (uri: string) => setPhotos((prev) => prev.filter((p) => p !== uri));
 
   const submit = () => {
+    // This was the last per-garment step: save the garment into the booking, then let the
+    // customer add another one or continue to scheduling.
     updateBooking({ designPhotos: photos });
-    navigate(`/customer/booking/${tailorId}/date`);
+    commitDraftItem();
+    navigate(`/customer/booking/${tailorId}/items`);
   };
 
   return (
@@ -50,7 +54,7 @@ export default function DesignUpload() {
         </button>
       </div>
       <div className="fixed inset-x-0 bottom-0 border-t border-ht-border bg-ht-card px-4 py-3.5 sm:left-56 sm:px-6">
-        <Button label={photos.length ? 'Continue' : 'Skip for Now'} onClick={submit} />
+        <Button label={photos.length ? 'Add Garment to Booking' : 'Skip Photos & Add Garment'} onClick={submit} />
       </div>
     </div>
   );

@@ -2,25 +2,32 @@ import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useStore, ME_CUSTOMER } from '@/store/useStore';
 import type { Booking } from '@/store/types';
+import { categorySummary, colourLabel, itemTitle, materialLabel } from '@/lib/bookingItems';
 
 export default function Processing() {
   const { tailorId } = useParams<{ tailorId: string }>();
   const navigate = useNavigate();
   const booking = useStore((s) => s.booking);
   const tailors = useStore((s) => s.tailors);
-  const measurements = useStore((s) => s.measurements);
   const addresses = useStore((s) => s.addresses);
   const createBooking = useStore((s) => s.createBooking);
   const resetBooking = useStore((s) => s.resetBooking);
 
   useEffect(() => {
     const t = setTimeout(() => {
+      // Nothing to submit (e.g. page reload lost the in-memory draft): send the customer back.
+      if (!booking.items?.length) { navigate(`/customer/booking/${tailorId}/items`, { replace: true }); return; }
       const tailor = tailors.find((t) => t.id === tailorId);
 
-      const savedMeasurement = measurements.find((m) => m.id === booking.measurementId);
-      const bookingMeasurements = savedMeasurement
-        ? [{ garment: booking.category ?? 'Garment', fields: Object.entries(savedMeasurement.fields).map(([label, value]) => ({ label, value })) }]
-        : [];
+      // One booking, many garments: each item was snapshotted (with its own measurements) when it
+      // was added; the flat Booking fields below summarise them so existing screens keep working.
+      const items = booking.items ?? [];
+      const multi = items.length > 1;
+      const bookingMeasurements = items.flatMap((item) =>
+        item.measurement ? [{ ...item.measurement, garment: multi ? itemTitle(item) : item.category }] : [],
+      );
+      const uniq = (values: string[]) => [...new Set(values.filter(Boolean))].join(', ');
+      const genders = new Set(items.map((i) => i.gender));
 
       const address = booking.addressId ? addresses.find((a) => a.id === booking.addressId) : undefined;
       const location = address ? `${address.address}, ${address.city}` : `${tailor?.locality ?? tailor?.city ?? ''}, ${tailor?.city ?? ''}`;
@@ -33,12 +40,13 @@ export default function Processing() {
         customerAvatar: ME_CUSTOMER.avatar,
         tailorId: tailorId ?? '',
         tailorName: tailor?.shopName ?? '—',
-        category: booking.category ?? '',
-        gender: booking.gender,
-        service: booking.service,
-        customerProvidedCloth: booking.customerProvidedCloth,
-        materialPreference: booking.clothType,
-        colourPreference: booking.colour,
+        category: categorySummary(items),
+        gender: genders.size === 1 ? items[0].gender : undefined, // mixed-gender bookings have no single gender
+        service: uniq(items.map((i) => i.service ?? `${i.category} Stitching`)),
+        customerProvidedCloth: items.some((i) => i.customerProvidedCloth),
+        materialPreference: uniq(items.map(materialLabel)),
+        colourPreference: uniq(items.map(colourLabel)),
+        items,
         pickupSlot: booking.timeSlot,
         finalDeliveryMethod: booking.deliveryMethod,
         quoteStatus: 'Pending',
@@ -59,7 +67,7 @@ export default function Processing() {
         status: 'Requested',
         notes: booking.notes,
         measurements: bookingMeasurements,
-        designPhotos: booking.designPhotos ?? [],
+        designPhotos: items.flatMap((i) => i.designPhotos),
         requestedAt: new Date().toISOString(),
         history: [{ stage: 'Requested', at: new Date().toISOString() }],
       };

@@ -89,6 +89,32 @@ export const BOOKING_STAGES: BookingStatus[] = [
 
 export type BookingMeasurement = { garment: string; fields: { label: string; value: string }[] };
 
+// One garment inside a booking. A booking holds 1..n of these under a single tailor, each with its
+// own gender/garment/measurements/material/colour/quantity/photos/notes (and, once the tailor has
+// quoted, its own stitching + material charge). Booking.items is optional so pre-existing
+// single-garment bookings (which only have the flat category/gender/... fields) keep working —
+// see bookingItemsOf() in src/lib/bookingItems.ts for the compatibility shim.
+export interface BookingItem {
+  id: string;
+  gender: 'Men' | 'Women' | 'Kids';
+  category: string; // garment, e.g. "Shirt"
+  service?: string;
+  personId?: string;
+  measurementId?: string;
+  measurement?: BookingMeasurement; // snapshot taken when the item was added
+  material: string; // predefined option or "Other"
+  customMaterial?: string; // only when material === 'Other'
+  colour: string; // predefined option or "Other"
+  customColour?: string; // only when colour === 'Other'
+  quantity: number;
+  customerProvidedCloth: boolean;
+  designPhotos: string[];
+  notes?: string;
+  // Set by the tailor's quotation (line totals for this item, incl. quantity).
+  stitchingCharge?: number;
+  materialCost?: number;
+}
+
 // THE cross-role record. customer booking-confirm -> pushes one of these.
 // tailor bookings/orders screens filter by tailorId. admin orders table reads all of them.
 export interface Booking {
@@ -104,6 +130,7 @@ export interface Booking {
   customerProvidedCloth?: boolean;
   materialPreference?: string;
   colourPreference?: string;
+  items?: BookingItem[]; // 1..n garments under this one booking; category/gender/... above summarise them
   pickupSlot?: string;
   finalDeliveryMethod?: 'Self Pickup' | 'Home Delivery';
   quoteStatus?: 'Pending' | 'Sent' | 'Accepted' | 'Changes Requested' | 'Rejected';

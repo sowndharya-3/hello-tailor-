@@ -14,6 +14,7 @@ export type MessageType =
   | 'design_preview' // tailor uploaded a design, not yet asking for approval
   | 'design_approval' // the special approval card (Phase 12)
   | 'change_request' // the special change-requested card (Phase 15)
+  | 'voice' // voice note (one audio attachment)
   | 'system'; // "Customer approved Design V1." etc
 
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
@@ -31,8 +32,10 @@ export interface Attachment {
   messageId: string;
   fileUrl: string;
   thumbnailUrl?: string;
-  fileType: 'image' | 'document';
+  fileType: 'image' | 'document' | 'audio';
   fileSize?: number;
+  durationSec?: number; // audio only
+  mimeType?: string; // audio only
   photoType?: PhotoType;
 }
 
@@ -71,6 +74,8 @@ export interface Message {
   conversationId: string;
   senderId: string; // customerId / tailorId / 'system'
   senderType: SenderType;
+  receiverId?: string; // the other participant (customerId / tailorId)
+  bookingId?: string;
   messageType: MessageType;
   text?: string;
   caption?: string; // caption on an attachment message

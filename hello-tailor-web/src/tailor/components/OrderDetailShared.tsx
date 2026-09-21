@@ -6,6 +6,8 @@ import Avatar from '@/components/ui/Avatar';
 import type { Booking } from '@/store/types';
 import { formatCurrency, formatDate } from '../lib/status';
 import ChatEntryButton from '@/chat/ChatEntryButton';
+import BookingItemsList from '@/components/BookingItemsList';
+import { bookingItemsOf } from '@/lib/bookingItems';
 
 export function CustomerInfoCard({ order }: { order: Booking }) {
   return (
@@ -27,6 +29,18 @@ export function CustomerInfoCard({ order }: { order: Booking }) {
       </div>
       <ChatEntryButton role="tailor" booking={order} />
     </Card>
+  );
+}
+
+// Every garment in the booking, each with its own gender / material / colour / quantity / notes
+// (and its quoted charges once the tailor has sent a quotation).
+export function BookingItemsCard({ order }: { order: Booking }) {
+  const items = bookingItemsOf(order);
+  return (
+    <div>
+      <p className="mb-2 flex items-center gap-2 font-semibold text-ht-text">👕 Garments ({items.length})</p>
+      <BookingItemsList items={items} showCharges={order.quoteStatus === 'Sent' || order.quoteStatus === 'Accepted'} />
+    </div>
   );
 }
 

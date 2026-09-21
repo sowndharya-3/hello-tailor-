@@ -3,6 +3,7 @@ import { useStore } from '@/store/useStore';
 import ScreenHeader from '@/components/ui/ScreenHeader';
 import StepProgress from '@/customer/components/StepProgress';
 import Button from '@/components/ui/Button';
+import { categorySummary } from '@/lib/bookingItems';
 
 export default function DeliveryDate() {
   const { tailorId } = useParams<{ tailorId: string }>();
@@ -36,7 +37,7 @@ export default function DeliveryDate() {
           <p className="mb-1 text-[16px] font-semibold text-ht-text">Why this date?</p>
           <div className="flex items-start gap-2">
             <span className="text-ht-success">✔️</span>
-            <p className="flex-1 text-[14px] text-ht-text-secondary">{tailor.shopName} typically delivers {booking.category} orders in {tailor.deliveryDays} days</p>
+            <p className="flex-1 text-[14px] text-ht-text-secondary">{tailor.shopName} typically delivers {booking.items?.length ? categorySummary(booking.items) : booking.category} orders in {tailor.deliveryDays} days</p>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-ht-success">✔️</span>

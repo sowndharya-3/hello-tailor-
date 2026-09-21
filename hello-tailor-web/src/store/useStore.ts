@@ -7,7 +7,7 @@ import { useShallow } from 'zustand/react/shallow';
 import type {
   Role, Booking, BookingStatus, NotificationItem, Tailor, Customer, Review, Payment,
   CommissionEntry, MembershipPlan, Coupon, Advertisement, Complaint, LocationEntry,
-  AdminCategory, AdminNotification,
+  AdminCategory, AdminNotification, BookingItem,
 } from './types';
 import {
   tailors as seedTailors, customers as seedCustomers, initialBookings, initialNotifications,
@@ -35,8 +35,10 @@ export type BookingDraft = {
   service?: string;
   personId?: string;
   clothType?: string;
+  customMaterial?: string; // typed material when clothType === 'Other'
   material?: string;
   colour?: string;
+  customColour?: string; // typed colour when colour === 'Other'
   quantity?: number;
   customerProvidedCloth?: boolean;
   clothNotes?: string;
@@ -51,6 +53,9 @@ export type BookingDraft = {
   timeSlot?: string;
   notes?: string;
   couponCode?: string;
+  // Garments already added to this booking. The per-garment fields above always describe the item
+  // currently being filled in; commitDraftItem() moves them into this list.
+  items?: BookingItem[];
 };
 
 interface StoreState {
@@ -134,6 +139,8 @@ interface StoreState {
   booking: BookingDraft;
   updateBooking: (patch: Partial<BookingDraft>) => void;
   resetBooking: () => void;
+  commitDraftItem: () => void; // add the garment being edited to booking.items and clear its fields
+  removeDraftItem: (id: string) => void;
   family: typeof seedFamily;
   addFamilyMember: (m: (typeof seedFamily)[number]) => void;
   addresses: Address[];
@@ -256,6 +263,48 @@ export const useStore = create<StoreState>((set, get) => ({
   booking: {},
   updateBooking: (patch) => set((s) => ({ booking: { ...s.booking, ...patch } })),
   resetBooking: () => set({ booking: {} }),
+  commitDraftItem: () => set((s) => {
+    const d = s.booking;
+    if (!d.gender || !d.category) return s; // nothing being edited (e.g. browser-back onto a finished step)
+    const saved = s.measurements.find((m) => m.id === d.measurementId);
+    const existing = d.items ?? [];
+    const item: BookingItem = {
+      id: `it-${Date.now()}-${existing.length + 1}`,
+      gender: d.gender,
+      category: d.category,
+      service: d.service,
+      personId: d.personId,
+      measurementId: d.measurementId,
+      measurement: saved
+        ? { garment: d.category, fields: Object.entries(saved.fields).map(([label, value]) => ({ label, value })) }
+        : undefined,
+      material: d.clothType ?? '',
+      customMaterial: d.clothType === 'Other' ? d.customMaterial?.trim() : undefined,
+      colour: d.colour ?? '',
+      customColour: d.colour === 'Other' ? d.customColour?.trim() : undefined,
+      quantity: d.quantity ?? 1,
+      customerProvidedCloth: d.customerProvidedCloth ?? true,
+      designPhotos: d.designPhotos ?? [],
+      notes: d.clothNotes?.trim() || undefined,
+    };
+    const items = [...existing, item];
+    return {
+      booking: {
+        ...d,
+        items,
+        // Booking-level flag drives the pickup step: needed if ANY garment's cloth comes from the customer.
+        customerProvidedCloth: items.some((i) => i.customerProvidedCloth),
+        gender: undefined, category: undefined, service: undefined, personId: undefined,
+        measurementId: undefined, newMeasurement: undefined, clothType: undefined, customMaterial: undefined,
+        material: undefined, colour: undefined, customColour: undefined, quantity: undefined,
+        clothNotes: undefined, designPhotos: undefined,
+      },
+    };
+  }),
+  removeDraftItem: (id) => set((s) => {
+    const items = (s.booking.items ?? []).filter((i) => i.id !== id);
+    return { booking: { ...s.booking, items, customerProvidedCloth: items.some((i) => i.customerProvidedCloth) } };
+  }),
   family: seedFamily,
   addFamilyMember: (m) => set((s) => ({ family: [...s.family, m] })),
   addresses: seedAddresses,

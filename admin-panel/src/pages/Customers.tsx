@@ -13,6 +13,7 @@ import DataTable, { type Column, type RowAction } from '../components/ui/DataTab
 import { useToast } from '../components/ui/Toast';
 import { customers as seedCustomers } from '../data/mockData';
 import type { Customer } from '../types';
+import ExportButton from '../components/ui/ExportButton';
 
 export default function Customers() {
   const navigate = useNavigate();
@@ -75,7 +76,11 @@ export default function Customers() {
       <PageHeader
         title="Customer Management"
         description={`${customers.length} registered customers`}
-        actions={<Button icon={<UserPlus size={16} />}>Add Customer</Button>}
+        actions={<><ExportButton rows={filtered} filename="hello-tailor-customers" columns={[
+          { label: 'Customer ID', value: (c) => c.id }, { label: 'Name', value: (c) => c.name },
+          { label: 'Mobile', value: (c) => c.mobile }, { label: 'City', value: (c) => c.city },
+          { label: 'State', value: (c) => c.state }, { label: 'Status', value: (c) => c.status },
+        ]} /><Button icon={<UserPlus size={16} />}>Add Customer</Button></>}
       />
 
       <Card padded={false} className="p-4">

@@ -13,6 +13,7 @@ import DataTable, { type Column, type RowAction } from '../components/ui/DataTab
 import { useToast } from '../components/ui/Toast';
 import { tailors as seedTailors } from '../data/mockData';
 import type { Tailor, TailorType } from '../types';
+import ExportButton from '../components/ui/ExportButton';
 
 interface Props {
   typeFilter?: TailorType;
@@ -89,7 +90,12 @@ export default function TailorList({ typeFilter, title, description }: Props) {
 
   return (
     <div>
-      <PageHeader title={title} description={description} actions={<Button icon={<UserPlus size={16} />}>Add Tailor</Button>} />
+      <PageHeader title={title} description={description} actions={<><ExportButton rows={filtered} filename={`hello-tailor-${typeFilter?.toLowerCase() ?? 'all'}-tailors`} columns={[
+        { label: 'Tailor ID', value: (t) => t.id }, { label: 'Shop', value: (t) => t.shopName },
+        { label: 'Tailor', value: (t) => t.name }, { label: 'Type', value: (t) => t.type },
+        { label: 'City', value: (t) => t.city }, { label: 'State', value: (t) => t.state },
+        { label: 'Verification', value: (t) => t.verification }, { label: 'Status', value: (t) => t.status },
+      ]} /><Button icon={<UserPlus size={16} />}>Add Tailor</Button></>} />
 
       <Card padded={false} className="p-4">
         <div className="mb-4 flex flex-wrap items-end gap-3">

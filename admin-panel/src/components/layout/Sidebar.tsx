@@ -22,7 +22,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
         {!collapsed && (
           <div className="flex flex-col leading-tight overflow-hidden">
             <span className="text-white font-bold text-sm whitespace-nowrap">Hello Tailor</span>
-            <span className="text-white/60 text-[11px] whitespace-nowrap">Admin Console</span>
+            <span className="text-slate-200 text-[11px] whitespace-nowrap">Admin Console</span>
           </div>
         )}
       </div>
@@ -31,7 +31,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
         {navGroups.map((group) => (
           <div key={group.title} className="mb-5">
             {!collapsed && (
-              <div className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-white/40">
+              <div className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-blue-100/80">
                 {group.title}
               </div>
             )}
@@ -44,7 +44,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
                     `flex items-center gap-3 rounded-xl px-2.5 py-2.5 text-sm font-medium transition-colors ${
-                      isActive ? 'bg-ocean text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
+                      isActive ? 'bg-ocean text-white' : 'text-slate-100 hover:bg-white/10 hover:text-white'
                     }`
                   }
                 >
@@ -59,7 +59,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
 
       <button
         onClick={onToggle}
-        className="flex items-center justify-center gap-2 border-t border-white/10 px-4 py-3 text-white/60 hover:text-white text-sm"
+        className="flex items-center justify-center gap-2 border-t border-white/10 px-4 py-3 text-slate-200 hover:bg-white/10 hover:text-white text-sm"
       >
         {collapsed ? <ChevronsRight size={18} /> : <><ChevronsLeft size={18} /> Collapse</>}
       </button>
